@@ -1,4 +1,4 @@
-# FastAPI Project - Deployment
+# Matric Project - Deployment
 
 You can deploy the project using Docker Compose to a remote server.
 
@@ -12,7 +12,7 @@ But you have to configure a couple things first. 🤓
 
 * Have a remote server ready and available.
 * Configure the DNS records of your domain to point to the IP of the server you just created.
-* Configure a wildcard subdomain for your domain, so that you can have multiple subdomains for different services, e.g. `*.fastapi-project.example.com`. This will be useful for accessing different components, like `traefik.fastapi-project.example.com`, `adminer.fastapi-project.example.com`, etc. And also for `staging`, like `staging.fastapi-project.example.com`, `staging.adminer.fastapi-project.example.com`, etc.
+* Configure a wildcard subdomain for your domain, so that you can have multiple subdomains for different services, e.g. `*.matric.org.uk`. This will be useful for accessing different components, like `traefik.matric.org.uk`, `adminer.matric.org.uk`, etc. And also for `staging`, like `staging.matric.org.uk`, `staging.adminer.matric.joiner.org.uk`, etc.
 * Install and configure [Docker](https://docs.docker.com/engine/install/) on the remote server (Docker Engine, not Docker Desktop).
 
 ## Public Traefik
@@ -78,7 +78,7 @@ echo $HASHED_PASSWORD
 * Create an environment variable with the domain name for your server, e.g.:
 
 ```bash
-export DOMAIN=fastapi-project.example.com
+export DOMAIN=matric.joiner.org.uk
 ```
 
 * Create an environment variable with the email for Let's Encrypt, e.g.:
@@ -105,7 +105,7 @@ docker compose -f docker-compose.traefik.yml up -d
 
 ## Deploy the FastAPI Project
 
-Now that you have Traefik in place you can deploy your FastAPI project with Docker Compose.
+Now that you have Traefik in place you can deploy the Matric project with Docker Compose.
 
 **Note**: You might want to jump ahead to the section about Continuous Deployment with GitHub Actions.
 
@@ -122,13 +122,13 @@ export ENVIRONMENT=production
 Set the `DOMAIN`, by default `localhost` (for development), but when deploying you would use your own domain, for example:
 
 ```bash
-export DOMAIN=fastapi-project.example.com
+export DOMAIN=www.joiner.org.uk
 ```
 
 You can set several variables, like:
 
 * `PROJECT_NAME`: The name of the project, used in the API for the docs and emails.
-* `STACK_NAME`: The name of the stack used for Docker Compose labels and project name, this should be different for `staging`, `production`, etc. You could use the same domain replacing dots with dashes, e.g. `fastapi-project-example-com` and `staging-fastapi-project-example-com`.
+* `STACK_NAME`: The name of the stack used for Docker Compose labels and project name, this should be different for `staging`, `production`, etc. You could use the same domain replacing dots with dashes, e.g. `matric-project` and `staging-matric-project`.
 * `BACKEND_CORS_ORIGINS`: A list of allowed CORS origins separated by commas.
 * `SECRET_KEY`: The secret key for the FastAPI project, used to sign tokens.
 * `FIRST_SUPERUSER`: The email of the first superuser, this superuser will be the one that can create new users.
@@ -277,28 +277,27 @@ If you need to add extra environments you could use those as a starting point.
 
 ## URLs
 
-Replace `fastapi-project.example.com` with your domain.
 
 ### Main Traefik Dashboard
 
-Traefik UI: `https://traefik.fastapi-project.example.com`
+Traefik UI: `https://traefik.matric.joiner.org.uk`
 
 ### Production
 
-Frontend: `https://fastapi-project.example.com`
+Frontend: `https://matric.joiner.org.uk`
 
-Backend API docs: `https://fastapi-project.example.com/docs`
+Backend API docs: `https://matric.joiner.org.uk/docs`
 
-Backend API base URL: `https://fastapi-project.example.com/api/`
+Backend API base URL: `https://matric.joiner.org.uk/api/`
 
-Adminer: `https://adminer.fastapi-project.example.com`
+Adminer: `https://adminer.matric.joiner.org.uk`
 
 ### Staging
 
-Frontend: `https://staging.fastapi-project.example.com`
+Frontend: `https://staging.matric.joiner.org.uk`
 
-Backend API docs: `https://staging.fastapi-project.example.com/docs`
+Backend API docs: `https://staging.matric.joiner.org.uk/docs`
 
-Backend API base URL: `https://staging.fastapi-project.example.com/api/`
+Backend API base URL: `https://staging.matric.joiner.org.uk/api/`
 
-Adminer: `https://adminer.staging.fastapi-project.example.com`
+Adminer: `https://adminer.staging.matric.joiner.org.uk`

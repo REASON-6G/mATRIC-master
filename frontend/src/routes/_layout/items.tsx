@@ -132,10 +132,10 @@ function Items() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Items Management
+        Access Point Management
       </Heading>
 
-      <Navbar type={"Item"} />
+      <Navbar type={"Access Point"} />
       <ItemsTable />
     </Container>
   )

@@ -6,7 +6,7 @@ project_name:
 stack_name:
   type: str
   help: The name of the stack used for Docker Compose labels (no spaces) (in .env)
-  default: fastapi-project
+  default: matric-project
 
 secret_key:
   type: str
