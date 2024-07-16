@@ -1,4 +1,21 @@
-# Full Stack FastAPI Template
+# Matric
+
+
+![mATRIC_logo_5](https://github.com/REASON-6G/mATRIC/assets/63154875/2d3c0350-668f-44f7-a5bf-e9bdd90cb299)
+
+
+mATRIC is multi-Access Technology Intelligent Controller
+
+# Basic overview 
+This repository host the mATRIC software implementation platform, an intelligent RAN controller developed under the [![Static Badge](https://img.shields.io/badge/REASON-project)](https://reason-open-networks.ac.uk/about/) project to support multiple wireless access technologies.
+
+
+**The mATRIC platform supports the following capabilities:**
+
+- Real-time and near real-time scenarios.
+- Cellular and non-cellular access technologies – _5G, WiFi, LiFi_.
+- Monitoring, intelligence and data analytics.
+- Control and optimisation of RAN resources.
 
 <a href="https://github.com/tiangolo/full-stack-fastapi-template/actions?query=workflow%3ATest" target="_blank"><img src="https://github.com/tiangolo/full-stack-fastapi-template/workflows/Test/badge.svg" alt="Test"></a>
 <a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/tiangolo/full-stack-fastapi-template" target="_blank"><img src="https://coverage-badge.samuelcolvin.workers.dev/tiangolo/full-stack-fastapi-template.svg" alt="Coverage"></a>
