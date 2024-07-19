@@ -90,7 +90,7 @@ cd matric-joiner
 git push -u origin master
 ```
 
-### Update From the Original Template
+### Update From the Original Repository
 
 After cloning the repository, and after doing changes, you might want to get the latest changes from master.
 
