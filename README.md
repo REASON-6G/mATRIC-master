@@ -25,7 +25,8 @@ This repository host the mATRIC software implementation platform, an intelligent
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
     - 🧰 [SQLModel](https://sqlmodel.tiangolo.com) for the Python SQL database interactions (ORM).
     - 🔍 [Pydantic](https://docs.pydantic.dev), used by FastAPI, for the data validation and settings management.
-    - 💾 [PostgreSQL](https://www.postgresql.org) as the SQL database.
+    - 💾 [PostgreSQL](https://www.postgresql.org) as the SQL database for User Management/Login.
+    - 💽 [InfluxDB](https://www.influxdata.com) as the database for Access Point Management.
 - 🚀 [React](https://react.dev) for the frontend.
     - 💃 Using TypeScript, hooks, Vite, and other parts of a modern frontend stack.
     - 🎨 [Chakra UI](https://chakra-ui.com) for the frontend components.
