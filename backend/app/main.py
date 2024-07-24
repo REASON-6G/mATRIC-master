@@ -8,10 +8,16 @@ from app.core.config import settings
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
+    """
+    Custom function to generate unique id for each route.
+    """
     return f"{route.tags[0]}-{route.name}"
 
 
 if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
+    """
+    The Sentry SDK is initialized with the DSN from the settings and tracing is enabled.
+    """
     sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
 
 app = FastAPI(
