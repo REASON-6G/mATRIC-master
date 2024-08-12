@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from fastapi.security import OAuth2PasswordBearer
 from .dependencies import get_db
-from .models import UserCreate, UserUpdate, Token, TokenData, AgentTokenData  # Assuming these are in models.py
+from .models import UserCreate, UserUpdate, Token, TokenData  # Assuming these are in models.py
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -76,70 +76,13 @@ class AuthManager:
             print("JWTError: ", str(e))
             raise credentials_exception
         user = db_manager.get_user(username)
+        print("user: ", user)
         if user is None:
             raise credentials_exception
         return user
-
-    def get_current_agent(self, token: str, db: DatabaseManager = Depends(get_db_manager)) -> AgentTokenData:
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate agent credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        try:
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-            print("decoded payload: ", payload)
-            ap_id: str = payload.get("sub")
-            print("ap_id: ", ap_id)
-            if ap_id is None:
-                raise credentials_exception
-        except JWTError as e:
-            print("JWTError: ", str(e))
-            raise credentials_exception
-        agent = db.get_agent_by_username(ap_id)
-        print("agent from db: ", agent)
-        if agent is None:
-            raise credentials_exception
-
-        if not agent.onboard:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                details="Agent is not onboard"
-            )
-        print("agent: ", agent)
-        return AgentTokenData(ap_id=agent.ap_id, onboard=agent.onboard)
-
-    def get_current_third_party_app(self, token: str, db_manager: DatabaseManager):
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate third-party app credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        try:
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-            print("decoded payload: ", payload)
-            app_name: str = payload.get("sub")
-            print("app_name: ", app_name)
-            if app_name is None:
-                raise credentials_exception
-        except JWTError as e:
-            print("JWTError: ", str(e))
-            raise credentials_exception
-        app = db_manager.get_third_party_app(app_name)
-        if app is None:
-            raise credentials_exception
-        return app
 
 auth_manager = AuthManager()
 
 # Dependency to get the current user
 def get_current_user(token: str = Depends(oauth2_scheme), db: DatabaseManager = Depends(get_db_manager))-> TokenData:
     return auth_manager.get_current_user(token, db)
-
-# Dependency to get the current agent
-def get_current_agent(token: str = Depends(oauth2_scheme), db: DatabaseManager = Depends(get_db_manager))-> TokenData:
-    return auth_manager.get_current_agent(token, db)
-
-# Dependency to get the current third-party app
-def get_current_third_party_app(token: str = Depends(oauth2_scheme), db: DatabaseManager = Depends(get_db_manager))-> TokenData:
-    return auth_manager.get_current_third_party_app(token, db)

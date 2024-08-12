@@ -7,20 +7,9 @@ from .config import settings
 from .models import User as UserModel, UserCreate, UserUpdate
 from .models import Agents as AgentModel
 from .models import ThirdPartyApps as ThirdPartyAppModel
-from .database_session import SessionLocal, Base
+#from .database_session import SessionLocal, Base
 from .dependencies import get_db
 
-# Database URL
-# DATABASE_URL = f"postgresql://{settings.db_username}:{settings.db_password}@{settings.db_host}:{settings.db_port}/{settings.db_name}"
-#
-# # Create the SQLAlchemy engine
-# engine = create_engine(DATABASE_URL)
-#
-# # Create a configured "Session" class
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-#
-# # Create a base class for our classes definitions
-# Base = declarative_base()
 
 def get_db_manager(db: Session = Depends(get_db)):
     return DatabaseManager(db)
@@ -69,6 +58,7 @@ class DatabaseManager:
         return self.db.query(AgentModel).filter(AgentModel.ap_id == ap_id).first()
 
     def get_agent_by_username(self, username: str):
+        print("self: ", self.db.query(AgentModel).filter(AgentModel.ap_id == username).first())
         return self.db.query(AgentModel).filter(AgentModel.ap_id == username).first()
 
     def add_agent(self, ap_id: str, password_hash: str, configuration: dict):

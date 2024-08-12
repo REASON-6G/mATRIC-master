@@ -22,7 +22,9 @@ async def create_first_agent(user: AgentCreate, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=Agent)
 async def create_agent(agent: AgentCreate, db: Session = Depends(get_db), current_user: TokenData = Depends(get_current_user)):
+    print("current_user.roles: ", current_user.roles)
     if 'admin' not in current_user.roles:
+        print("not authorised")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create agents")
     db_manager = DatabaseManager(db)
     existing_agent = db_manager.get_agent_by_username(agent.ap_id)

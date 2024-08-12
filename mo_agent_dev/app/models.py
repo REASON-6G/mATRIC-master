@@ -112,6 +112,14 @@ class TokenData(BaseModel):
     class Config:
         orm_mode = True
 
+class AgentTokenData(BaseModel):
+    ap_id: str
+    onboard: bool
+    scopes: List[str] = []
+
+    class Config:
+        orm_mode = True
+
 # Add the class configuration for Pydantic models to support ORMs
 for model in [UserCreate, UserUpdate, AgentCreate, AgentUpdate, ThirdPartyAppCreate, ThirdPartyAppUpdate]:
     model.Config = type('Config', (), {"orm_mode": True})

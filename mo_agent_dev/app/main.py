@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import users, agent, third_party_apps, token
+from app.routes import users, agent, third_party_apps, token, agent_update
 from app.config import settings
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -48,3 +48,4 @@ app.include_router(token.router, prefix="/token", tags=["token"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(agent.router, prefix="/agents", tags=["agents"])
 app.include_router(third_party_apps.router, prefix="/third_party_apps", tags=["third_party_apps"])
+app.include_router(agent_update.router, prefix="/agent_update", tags=["agent_update"])
