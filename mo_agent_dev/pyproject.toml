@@ -18,7 +18,7 @@ passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 python-jose = "^3.3.0"
 python-dotenv = "^0.21.0"
 influxdb-client= "^1.21.0"
-matching-service-client = { git = "git@github.com:REASON-6G/matching-service-client.git", version = "^0.0.4"}
+matching_service_client = { git = "git@github.com:REASON-6G/matching-service-client.git"}
 pydantic-settings = "^2.4.0"
 email-validator = "^2.2.0"
 python-multipart = "^0.0.9"
