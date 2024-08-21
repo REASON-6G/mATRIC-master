@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "mo-agent-dev"
+version = "0.0.1"
+description = "A test application with publisher and subscriber"
+authors = ["Mohammadali Zabihitari <hg24245@bristol.ac.uk>",
+           "Tom Bower <tom.bower@weaverlabs.io>"]
+packages = [
+    {from = "app", include = "*.py"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.9,<4.0"
+fastapi = "^0.112.0"
+uvicorn = "^0.15.0"
+sqlalchemy = "^1.4.25"
+psycopg2-binary = "^2.9.3"
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
+python-jose = "^3.3.0"
+python-dotenv = "^0.21.0"
+influxdb-client= "^1.21.0"
+matching_service_client = { git = "git@github.com:REASON-6G/matching-service-client.git"}
+pydantic-settings = "^2.4.0"
+email-validator = "^2.2.0"
+python-multipart = "^0.0.9"
+cryptography = "^41.0.5"
+pyyaml = "^6.0.2"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.5"]
+build-backend = "poetry.core.masonry.api"
