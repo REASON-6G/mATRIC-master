@@ -8,8 +8,21 @@ import {
     Text,
     useBreakpointValue,
 } from '@chakra-ui/react'
+import MapMain from "../Map/MapMain.tsx";
 
 export default function Hero() {
+    const initialViewState = { latitude: 37.7577, longitude: -122.4376, zoom: 8 }
+
+    const markers = [
+        { latitude: 37.7577, longitude: -122.4376 },
+        { latitude: 38.7557, longitude: -122.4356 },
+        { latitude: 37.7597, longitude: -122.4396 },
+    ];
+
+    const handleMarkerClick = (latitude: number, longitude: number) => {
+        console.log(`Marker clicked at latitude: ${latitude}, longitude: ${longitude}`);
+    };
+
     return (
         <Stack minH={'100vh'} direction={{ base: 'column', md: 'row' }}>
             <Flex p={8} flex={1} align={'center'} justify={'center'}>
@@ -28,11 +41,11 @@ export default function Hero() {
                                 bg: 'lightgreen.400',
                                 zIndex: -1,
                             }}>
-                            Freelance
+                            Map of
                         </Text>
                         <br />{' '}
                         <Text color={'lightgreen.400'} as={'span'}>
-                            Matric Access Points
+                            mATRIC Access Points
                         </Text>{' '}
                     </Heading>
                     <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
@@ -53,6 +66,13 @@ export default function Hero() {
                 </Stack>
             </Flex>
             <Flex flex={1}>
+                <Stack spacing={6} w={'full'} maxW={'lg'}>
+                    <MapMain
+                        initialViewState={initialViewState}
+                        markers={markers}
+                        onMarkerClick={handleMarkerClick}
+                    />
+                </Stack>
             </Flex>
         </Stack>
     )

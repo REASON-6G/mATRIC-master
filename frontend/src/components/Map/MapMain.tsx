@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import MapGL, { NavigationControl, Marker } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MAPBOX_ACCESS_TOKEN = import.meta.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
-
 interface MapProps {
     initialViewState: {
         latitude: number;
@@ -20,7 +18,7 @@ interface MapProps {
 const Map: React.FC<MapProps> = ({
                                      initialViewState,
                                      style,
-                                     mapStyle = 'mapbox://styles/mapbox/satellite-streets-v12',
+                                     mapStyle = 'mapbox://styles/mapbox/streets-v9',
                                      markers = [],
                                      onMarkerClick,
                                      children,
@@ -33,7 +31,7 @@ const Map: React.FC<MapProps> = ({
             onMove={(evt) => setViewState(evt.viewState)}
             style={{ width: '100%', height: '100%', ...style }}
             mapStyle={mapStyle}
-            mapboxAccessToken={MAPBOX_ACCESS_TOKEN} // Ensure you set this in your .env file
+            mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} // Ensure you set this in your .env file
         >
             <NavigationControl />
             {markers.map((marker, index) => (
