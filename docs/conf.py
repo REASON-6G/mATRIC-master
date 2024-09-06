@@ -27,7 +27,7 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'default'
+html_theme = 'latest'
 html_static_path = ['_static']
 
 
