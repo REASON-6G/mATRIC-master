@@ -76,13 +76,13 @@ You can clone this repository as is.
 - Clone this repository manually:
 
 ```bash
-git clone git@github.com:REASON-6G/matric-joiner.git
+git clone https://github.com/REASON-6G/mATRIC-master.git
 ```
 
 - Enter into the new directory:
 
 ```bash
-cd matric-joiner
+cd matric-master
 ```
 
 - Push the code to your new repository:
@@ -100,8 +100,8 @@ After cloning the repository, and after doing changes, you might want to get the
 ```bash
 git remote -v
 
-origin    git@github.com:REASON-6G/matric-joiner.git (fetch)
-origin    git@github.com:REASON-6G/matric-joiner.git (push)
+origin    https://github.com/REASON-6G/mATRIC-master.git (fetch)
+origin    https://github.com/REASON-6G/mATRIC-master.git (push)
 ```
 
 - Pull the latest changes without merging:
