@@ -14,6 +14,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.githubpages',
+    'sphinx_rtd_theme',
 ]
 
 templates_path = ['_templates']
@@ -27,7 +28,7 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'default'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 
