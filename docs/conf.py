@@ -3,6 +3,7 @@
 # -- Project information -----------------------------------------------------
 project = 'mATRIC'
 author = 'Smart Internet Lab'
+# The full version, including alpha/beta/rc tags.
 release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
@@ -16,11 +17,19 @@ extensions = [
 ]
 
 templates_path = ['_templates']
+
+# The suffix of source filenames.
+source_suffix = ['.rst', '.md']
+
 exclude_patterns = []
 
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = 'sphinx'
+
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'alabaster'
+html_theme = 'default'
 html_static_path = ['_static']
+
 
 # -- Options for autodoc -----------------------------------------------------
 autodoc_default_options = {
