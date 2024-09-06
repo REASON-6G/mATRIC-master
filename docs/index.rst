@@ -10,10 +10,10 @@ Welcome to mATRIC's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   backend/README
-   frontend/README
-   deployment
-   development
+   backend
+   frontend
+   Deployment
+   Development
 
 Overview
 ========
