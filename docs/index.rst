@@ -45,7 +45,7 @@ Clone this repository and push the code to your new repository. Update configura
 Backend Development
 ====================
 
-Refer to the `<backend.rst>` page for detailed backend development instructions.
+Refer to the `backend development instructions <backend.html>`_ page for detailed backend development instructions.
 
 Frontend Development
 =====================
