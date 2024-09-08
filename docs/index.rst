@@ -50,7 +50,7 @@ Refer to the `<backend.rst>` page for detailed backend development instructions.
 Frontend Development
 =====================
 
-Refer to the `frontend/README.md` for detailed frontend development instructions.
+Refer to the `frontend development instructions <frontend.html>`_ for detailed frontend development instructions.
 
 Deployment
 ==========
