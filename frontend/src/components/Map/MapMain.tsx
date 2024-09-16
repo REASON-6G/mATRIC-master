@@ -18,7 +18,7 @@ interface MapProps {
 const Map: React.FC<MapProps> = ({
                                      initialViewState,
                                      style,
-                                     mapStyle = 'mapbox://styles/mapbox/streets-v9',
+                                     mapStyle = import.meta.env.VITE_MAPBOX_STYLE,
                                      markers = [],
                                      onMarkerClick,
                                      children,
@@ -31,7 +31,7 @@ const Map: React.FC<MapProps> = ({
             onMove={(evt) => setViewState(evt.viewState)}
             style={{ width: '100%', height: '100%', ...style }}
             mapStyle={mapStyle}
-            mapboxAccessToken={process.env.REACT_APP_MAPBOX_TOKEN} // Ensure you set this in your .env file
+            mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN} // Ensure you set this in your .env file
         >
             <NavigationControl />
             {markers.map((marker, index) => (
