@@ -19,7 +19,7 @@ const Map: React.FC<MapProps> = ({
                                      initialViewState,
                                      style,
                                      mapStyle = import.meta.env.VITE_MAPBOX_STYLE,
-                                     markers = [],
+                                     markers = [{ latitude: 51.4585, longitude: 2.6022 }],
                                      onMarkerClick,
                                      children,
                                  }) => {
