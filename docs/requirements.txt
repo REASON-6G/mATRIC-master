@@ -1,0 +1,10 @@
+# Sphinx core package
+sphinx==7.2.6
+
+# RTD theme for styling (optional, but recommended for consistency with ReadTheDocs theme)
+sphinx_rtd_theme==1.3.0
+
+# Add any Sphinx extensions you're using, for example:
+sphinx-autodoc-typehints==1.23.0  # If you're using type hinting for autodoc
+sphinxcontrib-napoleon==0.7       # For NumPy/Google style docstrings
+sphinxcontrib-httpdomain==1.8.0   # If you're documenting APIs
