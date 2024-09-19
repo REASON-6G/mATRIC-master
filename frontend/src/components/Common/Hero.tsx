@@ -11,12 +11,12 @@ import {
 import MapMain from "../Map/MapMain.tsx";
 
 export default function Hero() {
-    const initialViewState = { latitude: 37.7577, longitude: -122.4376, zoom: 8 }
+    const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 14 }
 
     const markers = [
-        { latitude: 37.7577, longitude: -122.4376 },
-        { latitude: 38.7557, longitude: -122.4356 },
-        { latitude: 37.7597, longitude: -122.4396 },
+        { latitude: 51.4492, longitude: -2.5813 }, // Bristol
+        { latitude: 52.2054, longitude: 0.1132 }, // Cambridge
+        { latitude: 50.9097, longitude: -1.4043 }, // Southampton
     ];
 
     const handleMarkerClick = (latitude: number, longitude: number) => {

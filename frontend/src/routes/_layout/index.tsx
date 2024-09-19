@@ -18,11 +18,11 @@ function Dashboard() {
           <Text fontSize="2xl">
             Hi, {currentUser?.full_name || currentUser?.email} 👋🏼
           </Text>
-          <Text>Welcome back, nice to see you again!</Text>
+          <Text>Welcome back!</Text>
         </Box>
-      </Container>
-      <Container maxW="full">
-        <Hero />
+          <Box pt={12} m={4}>
+              <Hero />
+          </Box>
       </Container>
     </>
   )
