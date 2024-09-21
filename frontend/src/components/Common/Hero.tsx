@@ -8,10 +8,11 @@ import {
     Text,
     useBreakpointValue,
 } from '@chakra-ui/react'
+
 import MapMain from "../Map/MapMain.tsx";
 
 export default function Hero() {
-    const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 14 }
+    const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 9 }
 
     const markers = [
         { latitude: 51.4492, longitude: -2.5813 }, // Bristol
@@ -66,13 +67,11 @@ export default function Hero() {
                 </Stack>
             </Flex>
             <Flex flex={1}>
-                <Stack spacing={6} w={'full'} maxW={'lg'}>
-                    <MapMain
-                        initialViewState={initialViewState}
-                        markers={markers}
-                        onMarkerClick={handleMarkerClick}
-                    />
-                </Stack>
+                <MapMain
+                    initialViewState={initialViewState}
+                    markers={markers}
+                    onMarkerClick={handleMarkerClick}
+                />
             </Flex>
         </Stack>
     )
