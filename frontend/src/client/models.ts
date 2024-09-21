@@ -14,6 +14,7 @@ export type HTTPValidationError = {
 export type ItemCreate = {
   title: string
   description?: string | null
+  supported_commands: Array<string>
 }
 
 export type ItemPublic = {
