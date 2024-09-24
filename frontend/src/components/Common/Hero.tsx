@@ -7,7 +7,7 @@ import {
 import MapMain from "../Map/MapMain.tsx";
 
 export default function Hero() {
-    const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 4 }
+    const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 3 }
 
     const markers = [
         { latitude: 51.4492, longitude: -2.5813 }, // Bristol
