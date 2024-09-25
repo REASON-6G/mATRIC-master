@@ -2,7 +2,7 @@
 name = "app"
 version = "0.1.0"
 description = ""
-authors = ["Admin <admin@example.com>"]
+authors = ["Smart Internet Lab <admin@example.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -24,7 +24,7 @@ sqlmodel = "^0.0.19"
 # Pin bcrypt until passlib supports the latest
 bcrypt = "4.0.1"
 pydantic-settings = "^2.2.1"
-sentry-sdk = {extras = ["fastapi"], version = "^2.14.0"}
+sentry-sdk = {extras = ["fastapi"], version = "^1.40.6"}
 pyjwt = "^2.8.0"
 sphinx-rtd-theme = "^2.0.0"
 
