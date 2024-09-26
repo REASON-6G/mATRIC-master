@@ -1,4 +1,4 @@
-import { Box, Card, Container, Text } from "@chakra-ui/react"
+import { Box, Card, Container, Text, SimpleGrid } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
 
 import useAuth from "../../hooks/useAuth"
@@ -29,13 +29,21 @@ function Dashboard() {
             <Hero />
           </Card>
         </Box>
-        <Box>
-          <Card p={4} m={2} borderStyle={"inset"}>
-            <NumberAccessPoints label={"Available Access points"} number={100} />
-          </Card>
-          <Card p={4} m={2} borderStyle={"inset"}>
-            <NumberAccessPoints label={"Available Agents"} number={100} />
-          </Card>
+        <Box pt={6} m={4}>
+            <SimpleGrid columns={{ sm: 1, md: 2, xl: 3 }}spacing={4}>
+                <NumberAccessPoints
+                    label={"Available Access points"}
+                    number={100}
+                    helpText={"Number of Currently Available Access Points"} />
+                <NumberAccessPoints
+                    label={"Available Agents"}
+                    number={100}
+                    helpText={"Wifi connections"}/>
+                <NumberAccessPoints
+                    label={"Available LIFI Access Point"}
+                    number={100}
+                    helpText={"Lifi connections"}/>
+            </SimpleGrid>
         </Box>
       </Container>
     </>
