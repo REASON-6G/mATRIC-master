@@ -22,7 +22,7 @@ jobs:
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

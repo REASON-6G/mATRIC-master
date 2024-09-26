@@ -10,7 +10,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalOverlay,
+  ModalOverlay, Select,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
@@ -44,7 +44,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     mutationFn: (data: ItemCreate) =>
       ItemsService.createItem({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Item created successfully.", "success")
+      showToast("Success!", "Access point created successfully.", "success")
       reset()
       onClose()
     },
@@ -96,6 +96,16 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
                 placeholder="Description"
                 type="text"
               />
+            </FormControl>
+            <FormControl isRequired isInvalid={!!errors.supported_commands}>
+              <FormLabel htmlFor="supported_commands">Supported Commands</FormLabel>
+                <Select
+                    id="supported_commands"
+                    {...register("supported_commands", {
+                    required: "Supported commands are required.",
+                    })}
+                    placeholder="Select Commands"
+                ></Select>
             </FormControl>
           </ModalBody>
 
