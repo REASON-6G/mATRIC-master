@@ -1,3 +1,4 @@
 .vscode
 frontend/.env
 *.pyc
+/frontend/coverage
