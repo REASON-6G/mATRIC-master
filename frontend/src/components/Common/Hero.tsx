@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from "react";
-import { FullscreenControl, Popup } from "react-map-gl";
+import { lazy, Suspense } from 'react';
+import { FullscreenControl } from "react-map-gl";
 import {
     Flex,Stack,
 } from '@chakra-ui/react'
 
-import MapMain from "../Map/MapMain.tsx";
+const MapMain = lazy(() => import('../Map/MapMain.tsx'));
 
 export default function Hero() {
     const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 3 }
@@ -32,13 +32,15 @@ export default function Hero() {
 
         <Stack minH={'50vh'} direction={{ base: 'column', md: 'row'}}>
             <Flex flex={1}>
-                <MapMain
-                    initialViewState={initialViewState}
-                    markers={markers}
-                    onMarkerClick={handleMarkerClick}
-                >
-                    <FullscreenControl />
-                </MapMain>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <MapMain
+                        initialViewState={initialViewState}
+                        markers={markers}
+                        onMarkerClick={handleMarkerClick}
+                    >
+                        <FullscreenControl />
+                    </MapMain>
+                </Suspense>
             </Flex>
         </Stack>
     )

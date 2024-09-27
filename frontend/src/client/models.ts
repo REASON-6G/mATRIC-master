@@ -1,4 +1,3 @@
-import {MutableRefObject} from "react";
 
 export type Body_login_login_access_token = {
   grant_type?: string | null

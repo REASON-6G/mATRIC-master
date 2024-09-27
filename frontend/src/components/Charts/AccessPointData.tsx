@@ -149,8 +149,10 @@ const AccessPointActivity: React.FC = () => {
         data1.push((Math.random() * 10 + 5).toFixed(1) - 0);
 
         newOption.xAxis[0].data.shift();
+        // @ts-ignore
         newOption.xAxis[0].data.push(axisData);
         newOption.xAxis[1].data.shift();
+        // @ts-ignore
         newOption.xAxis[1].data.push(count++);
 
         setOption(newOption);
