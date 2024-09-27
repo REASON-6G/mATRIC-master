@@ -1,10 +1,11 @@
-import { Box, Card, Container, Text, SimpleGrid } from "@chakra-ui/react"
+import { Box, Card, Container, Text, SimpleGrid, Grid } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
 
 import useAuth from "../../hooks/useAuth"
 import Hero from "../../components/Common/Hero.tsx";
 import HeroHeader from "../../components/Common/HeroHeader.tsx";
 import NumberAccessPoints from "../../components/AccessPoint/NumberAccessPoints.tsx";
+import AccessPointActivity from "../../components/Charts/AccessPointData.tsx";
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
@@ -45,6 +46,10 @@ function Dashboard() {
                     helpText={"Lifi connections"}/>
             </SimpleGrid>
         </Box>
+      <Grid pt={6} m={4}>
+          <AccessPointActivity />
+
+      </Grid>
       </Container>
     </>
   )
