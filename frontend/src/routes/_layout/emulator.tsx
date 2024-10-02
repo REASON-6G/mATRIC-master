@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import {Flex, Grid, Image, SimpleGrid} from "@chakra-ui/react";
+import { Flex, Grid, Image, SimpleGrid } from "@chakra-ui/react";
 
 import EmulatorHero from "../../components/Common/EmulatorHero.tsx";
 

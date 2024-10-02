@@ -9,7 +9,7 @@ const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: FiBriefcase, title: "Access Points", path: "/items" },
   { icon: FiCodepen, title: "Emulator", path: "/emulator" },
-  { icon: FiCode, title: "API Documentation", path: "loca/redoc" },
+  { icon: FiCode, title: "API Documentation", path: "/docs" },
   { icon: FiSettings, title: "User Settings", path: "/settings" },
 ]
 
