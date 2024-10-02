@@ -150,7 +150,7 @@ If you use GitHub Actions the tests will run automatically.
 If your stack is already up and you just want to run the tests, you can use:
 
 ```bash
-docker compose exec backend bash /app/tests-start.sh
+docker compose exec backend bash /app/__tests__-start.sh
 ```
 
 That `/app/tests-start.sh` script just calls `pytest` after making sure that the rest of the stack is running. If you need to pass extra arguments to `pytest`, you can pass them to that command and they will be forwarded.
@@ -158,7 +158,7 @@ That `/app/tests-start.sh` script just calls `pytest` after making sure that the
 For example, to stop on first error:
 
 ```bash
-docker compose exec backend bash /app/tests-start.sh -x
+docker compose exec backend bash /app/__tests__-start.sh -x
 ```
 
 #### Test Coverage

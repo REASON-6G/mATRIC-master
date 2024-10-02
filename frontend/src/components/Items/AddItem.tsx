@@ -97,7 +97,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
                 type="text"
               />
             </FormControl>
-            <FormControl isRequired isInvalid={!!errors.supported_commands}>
+            <FormControl isDisabled={true} isRequired isInvalid={!!errors.supported_commands}>
               <FormLabel htmlFor="supported_commands">Supported Commands</FormLabel>
                 <Select
                     id="supported_commands"

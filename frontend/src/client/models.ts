@@ -1,3 +1,4 @@
+
 export type Body_login_login_access_token = {
   grant_type?: string | null
   username: string
@@ -20,6 +21,7 @@ export type ItemCreate = {
 export type ItemPublic = {
   title: string
   description?: string | null
+  data: object | null
   id: number
   owner_id: number
 }
