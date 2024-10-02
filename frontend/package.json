@@ -23,6 +23,7 @@
     "@types/lodash.clonedeep": "^4.5.9",
     "@types/react-map-gl": "^6.1.6",
     "axios": "1.6.2",
+    "chakra-ui-steps": "^2.1.0",
     "dotenv": "^16.4.5",
     "echarts": "^5.5.1",
     "echarts-for-react": "^3.0.2",
