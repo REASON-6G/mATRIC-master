@@ -6,7 +6,7 @@ describe('MapMain Component', () => {
     const initialViewState = {
         latitude: 51.4585,
         longitude: 2.6022,
-        zoom: 10,
+        zoom: 4,
     };
 
     test('renders MapMain component correctly', () => {
