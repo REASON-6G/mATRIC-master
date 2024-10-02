@@ -9,7 +9,7 @@ const config: Config = {
   // All imported modules in your __tests__ should be mocked automatically
   // automock: false,
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
