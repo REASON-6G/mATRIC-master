@@ -2,3 +2,4 @@
 frontend/.env
 *.pyc
 /frontend/coverage
+/.idea

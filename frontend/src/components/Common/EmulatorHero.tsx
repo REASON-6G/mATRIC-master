@@ -60,7 +60,6 @@ export const EmulatorHero: React.FC<EmulatorHeroProps> = ({ title, name, descrip
                     </Flex>
                     <Spacer />
                     <Flex
-                        bg='teal.300'
                         align='center'
                         justify='center'
                         borderRadius='15px'
