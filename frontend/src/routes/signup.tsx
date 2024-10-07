@@ -4,18 +4,18 @@ import {
     Flex,
     FormControl,
     FormLabel,
-    HStack,
-    Icon,
     Input,
     Link,
     Switch,
     Text,
-    useColorModeValue,
 } from "@chakra-ui/react";
-//
-import { FaMicrosoft } from "react-icons/fa";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+
+import { Link as RouterLink, createFileRoute, redirect } from "@tanstack/react-router";
+
+import type { Body_login_login_access_token as AccessToken } from "../client"
 import { isLoggedIn } from "../hooks/useAuth.ts";
+import { emailPattern } from "../utils"
+import {type SubmitHandler, useForm} from "react-hook-form";
 
 export const Route = createFileRoute("/signup")({
     component: SignUp,
@@ -29,7 +29,32 @@ export const Route = createFileRoute("/signup")({
 })
 
 function SignUp() {
-    const bgIcons = useColorModeValue("teal.200", "rgba(255, 255, 255, 0.5)");
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<AccessToken>({
+        mode: "onBlur",
+        criteriaMode: "all",
+        defaultValues: {
+            username: "",
+            password: "",
+            scope: "",
+        },
+    })
+
+    const onSubmit: SubmitHandler<AccessToken> = async (data) => {
+        if (isSubmitting) return
+
+        resetError()
+
+        try {
+            await loginMutation.mutateAsync(data)
+        } catch {
+            // error is handled by useAuth hook
+        }
+    }
+
     return (
         <Flex
             direction='column'
@@ -155,9 +180,9 @@ function SignUp() {
                         <Text fontWeight='medium'>
                             Already have an account?
                             <Link
-                                as='span'
+                                as={RouterLink}
+                                top="/login"
                                 ms='5px'
-                                href='/login'
                                 fontWeight='bold'>
                                 Sign In
                             </Link>
