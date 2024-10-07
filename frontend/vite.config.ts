@@ -26,6 +26,7 @@ export default defineConfig({
             VITE_MAPBOX_TOKEN: JSON.stringify(mapboxToken),
             VITE_MAPBOX_STYLE: JSON.stringify(mapboxStyle),
         },
+      'import.meta.env': {},
   },
   build: {
       sourcemap: process.env.VITE_SOURCEMAP === "true",
