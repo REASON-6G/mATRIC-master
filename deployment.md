@@ -12,7 +12,7 @@ But you have to configure a couple things first. 🤓
 
 * Have a remote server ready and available.
 * Configure the DNS records of your domain to point to the IP of the server you just created.
-* Configure a wildcard subdomain for your domain, so that you can have multiple subdomains for different services, e.g. `*.matric.org.uk`. This will be useful for accessing different components, like `traefik.matric.org.uk`, `adminer.matric.org.uk`, etc. And also for `staging`, like `staging.matric.org.uk`, `staging.adminer.matric.joiner.org.uk`, etc.
+* Configure a wildcard subdomain for your domain, so that you can have multiple subdomains for different services, e.g. `*.matric.uk`. This will be useful for accessing different components, like `traefik.matric.uk`, `adminer.matric.uk`, etc. And also for `staging`, like `staging.matric.uk`, `staging.adminer.matric.uk`, etc.
 * Install and configure [Docker](https://docs.docker.com/engine/install/) on the remote server (Docker Engine, not Docker Desktop).
 
 ## Public Traefik
@@ -78,13 +78,13 @@ echo $HASHED_PASSWORD
 * Create an environment variable with the domain name for your server, e.g.:
 
 ```bash
-export DOMAIN=matric.joiner.org.uk
+export DOMAIN=matric.uk
 ```
 
 * Create an environment variable with the email for Let's Encrypt, e.g.:
 
 ```bash
-export EMAIL=admin@example.com
+export EMAIL=admin@matric.uk
 ```
 
 **Note**: you need to set a different email, an email `@example.com` won't work.
@@ -122,7 +122,7 @@ export ENVIRONMENT=production
 Set the `DOMAIN`, by default `localhost` (for development), but when deploying you would use your own domain, for example:
 
 ```bash
-export DOMAIN=www.joiner.org.uk
+export DOMAIN=www.matric.uk
 ```
 
 You can set several variables, like:
@@ -280,24 +280,24 @@ If you need to add extra environments you could use those as a starting point.
 
 ### Main Traefik Dashboard
 
-Traefik UI: `https://traefik.matric.joiner.org.uk`
+Traefik UI: `https://traefik.matric.uk`
 
 ### Production
 
-Frontend: `https://matric.joiner.org.uk`
+Frontend: `https://matric.uk`
 
-Backend API docs: `https://matric.joiner.org.uk/docs`
+Backend API docs: `https://matric.uk/docs`
 
-Backend API base URL: `https://matric.joiner.org.uk/api/`
+Backend API base URL: `https://matric.uk/api/`
 
-Adminer: `https://adminer.matric.joiner.org.uk`
+Adminer: `https://adminer.matric.uk`
 
 ### Staging
 
-Frontend: `https://staging.matric.joiner.org.uk`
+Frontend: `https://staging.matric.uk`
 
-Backend API docs: `https://staging.matric.joiner.org.uk/docs`
+Backend API docs: `https://staging.matric.uk/docs`
 
-Backend API base URL: `https://staging.matric.joiner.org.uk/api/`
+Backend API base URL: `https://staging.matric.uk/api/`
 
-Adminer: `https://adminer.staging.matric.joiner.org.uk`
+Adminer: `https://adminer.staging.matric.uk`

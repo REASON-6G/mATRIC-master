@@ -67,7 +67,7 @@ This repository host the mATRIC software implementation platform, an intelligent
 
 ### Interactive API Documentation
 
-[![API docs](img/docs.png)](https://github.com/REASON-RG/matric-joiner)
+[![API docs](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ## How To Use It
 
