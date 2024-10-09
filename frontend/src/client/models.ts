@@ -100,3 +100,14 @@ export type ValidationError = {
   msg: string
   type: string
 }
+
+export type Channel = {
+  type: string
+  name: string
+  alias: string
+  host: string
+  port: number
+  dest_host: string
+  dest_port: number
+  console_level?: number | null
+}
