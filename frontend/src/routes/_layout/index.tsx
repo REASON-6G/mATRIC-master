@@ -6,7 +6,6 @@ import Hero from "../../components/Common/Hero.tsx";
 import HeroHeader from "../../components/Common/HeroHeader.tsx";
 import NumberAccessPoints from "../../components/AccessPoint/NumberAccessPoints.tsx";
 import AccessPointActivity from "../../components/Charts/AccessPointData.tsx";
-import WifiStatsCard from "../../components/AccessPoint/WifiStatsCard.tsx";
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,

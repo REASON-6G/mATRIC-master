@@ -1,7 +1,7 @@
 
 export type Body_login_login_access_token = {
   grant_type?: string | null
-  username: string
+  email: string
   password: string
   scope?: string
   client_id?: string | null

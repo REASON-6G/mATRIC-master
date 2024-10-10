@@ -4,7 +4,6 @@ import {
     Heading,
     Text,
     Button,
-    Image,
     VStack,
     HStack,
     useColorMode,

@@ -3,7 +3,9 @@ import {
     Button,
     Flex,
     FormControl,
+    FormErrorMessage,
     FormLabel,
+    Image,
     Input,
     Link,
     Switch,
@@ -12,10 +14,11 @@ import {
 
 import { Link as RouterLink, createFileRoute, redirect } from "@tanstack/react-router";
 
-import type { Body_login_login_access_token as AccessToken } from "../client"
-import { isLoggedIn } from "../hooks/useAuth.ts";
+import type { UserRegister } from "../client"
+import useAuth, { isLoggedIn } from "../hooks/useAuth.ts";
 import { emailPattern } from "../utils"
-import {type SubmitHandler, useForm} from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import Logo from "/assets/images/logo.png"
 
 export const Route = createFileRoute("/signup")({
     component: SignUp,
@@ -29,27 +32,27 @@ export const Route = createFileRoute("/signup")({
 })
 
 function SignUp() {
+    const { error, resetError, signupMutation } = useAuth()
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
-    } = useForm<AccessToken>({
+    } = useForm<UserRegister>({
         mode: "onBlur",
         criteriaMode: "all",
         defaultValues: {
-            username: "",
+            email: "",
             password: "",
-            scope: "",
         },
     })
 
-    const onSubmit: SubmitHandler<AccessToken> = async (data) => {
+    const onSubmit: SubmitHandler<UserRegister> = async (data) => {
         if (isSubmitting) return
 
         resetError()
 
         try {
-            await loginMutation.mutateAsync(data)
+            await signupMutation.mutateAsync(data)
         } catch {
             // error is handled by useAuth hook
         }
@@ -102,15 +105,17 @@ function SignUp() {
                         mb='22px'>
                         Sign Up
                     </Text>
-                    <Text
-                        fontSize='lg'
-                        color='gray.400'
-                        fontWeight='bold'
-                        textAlign='center'
-                        mb='22px'>
-                        or
-                    </Text>
-                    <FormControl>
+                    <Image
+                        src={Logo}
+                        alt="mATRIC logo"
+                        height="auto"
+                        maxW="2xs"
+                        alignSelf="center"
+                        mb={4}
+                    />
+                    <FormControl
+                        onSubmit={handleSubmit(onSubmit)}
+                    >
                         <FormLabel ms='4px' fontSize='sm' fontWeight='normal'>
                             Name
                         </FormLabel>
@@ -127,6 +132,10 @@ function SignUp() {
                             Email
                         </FormLabel>
                         <Input
+                            id="username" isInvalid={!!errors.email || !!error}
+                            {...register("email", {
+                                pattern: emailPattern,
+                            })}
                             fontSize='sm'
                             ms='4px'
                             borderRadius='15px'
@@ -154,7 +163,8 @@ function SignUp() {
                             </FormLabel>
                         </FormControl>
                         <Button
-                            type='submit'
+                            type="submit"
+                            isLoading={isSubmitting}
                             bg='teal.300'
                             fontSize='10px'
                             color='white'
@@ -170,6 +180,7 @@ function SignUp() {
                             }}>
                             SIGN UP
                         </Button>
+                        {error && <FormErrorMessage>{error}</FormErrorMessage>}
                     </FormControl>
                     <Flex
                         flexDirection='column'
