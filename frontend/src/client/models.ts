@@ -1,7 +1,7 @@
 
 export type Body_login_login_access_token = {
   grant_type?: string | null
-  email: string
+  username: string
   password: string
   scope?: string
   client_id?: string | null
@@ -15,7 +15,7 @@ export type HTTPValidationError = {
 export type ItemCreate = {
   title: string
   description?: string | null
-  supported_commands: Array<string>
+  supported_commands: Array<string> | null
 }
 
 export type ItemPublic = {

@@ -47,7 +47,7 @@ function Login() {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   })
@@ -84,18 +84,18 @@ function Login() {
           alignSelf="center"
           mb={4}
         />
-        <FormControl id="username" isInvalid={!!errors.email || !!error}>
+        <FormControl id="username" isInvalid={!!errors.username || !!error}>
           <Input
             id="username"
-            {...register("email", {
+            {...register("username", {
               pattern: emailPattern,
             })}
             placeholder="Email"
             type="email"
             required
           />
-          {errors.email && (
-            <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+          {errors.username && (
+            <FormErrorMessage>{errors.username.message}</FormErrorMessage>
           )}
         </FormControl>
         <FormControl id="password" isInvalid={!!error}>
