@@ -10,7 +10,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalOverlay, Select,
+  ModalOverlay,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
@@ -37,6 +37,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     defaultValues: {
       title: "",
       description: "",
+      data: "",
     },
   })
 
@@ -94,6 +95,15 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
                 id="description"
                 {...register("description")}
                 placeholder="Description"
+                type="text"
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel htmlFor="location">Location</FormLabel>
+              <Input
+                id="location"
+                {...register("data")}
+                placeholder="Location"
                 type="text"
               />
             </FormControl>
