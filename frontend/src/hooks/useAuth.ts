@@ -24,6 +24,33 @@ const useAuth = () => {
     enabled: isLoggedIn(),
   })
 
+  const signup = async (data: AccessToken) => {
+    const response = await UsersService.registerUser({
+      requestBody: data,
+    })
+    console.log(`User ${response.email} created successfully!`)
+  }
+
+  const signupMutation = useMutation({
+    mutationFn: signup,
+    onSuccess: () => {
+      navigate({ to: "/" })
+    },
+    onError: (err: ApiError) => {
+      let errDetail = (err.body as any)?.detail
+
+      if (err instanceof AxiosError) {
+        errDetail = err.message
+      }
+
+      if (Array.isArray(errDetail)) {
+        errDetail = "Something went wrong"
+      }
+
+      setError(errDetail)
+    },
+  })
+
   const login = async (data: AccessToken) => {
     const response = await LoginService.loginAccessToken({
       formData: data,
@@ -58,6 +85,7 @@ const useAuth = () => {
 
   return {
     loginMutation,
+    signupMutation,
     logout,
     user,
     isLoading,
