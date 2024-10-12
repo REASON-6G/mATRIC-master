@@ -15,13 +15,14 @@ export type HTTPValidationError = {
 export type ItemCreate = {
   title: string
   description?: string | null
+  data: string | null
   supported_commands: Array<string> | null
 }
 
 export type ItemPublic = {
   title: string
   description?: string | null
-  data: object | null
+  data: string | null
   id: number
   owner_id: number
 }
@@ -29,6 +30,7 @@ export type ItemPublic = {
 export type ItemUpdate = {
   title?: string | null
   description?: string | null
+  data?: string | null
 }
 
 export type ItemsPublic = {
