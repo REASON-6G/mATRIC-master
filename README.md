@@ -43,19 +43,19 @@ This repository host the mATRIC software implementation platform, an intelligent
 
 ### Dashboard Login
 
-[![Dashboard Login](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
+[![Dashboard Login](img/login_screen.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ### Dashboard - Emulator
 
-[![Dashboard Emulator](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
+[![Dashboard Emulator](img/emulator.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ### Dashboard - Console
 
-[![Dashboard Console](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
+[![Dashboard Console](img/console.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ### Access Points Globe Search
 
-[![Access Points Globe Search](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
+[![Access Points Globe Search](img/globe.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ### Interactive API Documentation
 
