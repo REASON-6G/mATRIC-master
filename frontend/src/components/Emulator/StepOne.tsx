@@ -24,7 +24,11 @@ const Form1 = () => {
                     <FormLabel htmlFor="first-name" fontWeight={'normal'}>
                         Select Access Point Type
                     </FormLabel>
-                    <Select id="first-name" placeholder="Emulator type..." />
+                    <Select id="first-name" placeholder="Emulator type...">
+                        <option>5G</option>
+                        <option>WiFi</option>
+                        <option>LiFi</option>
+                    </Select>
                 </FormControl>
             </Flex>
             <FormControl mt="2%">
