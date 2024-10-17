@@ -3,13 +3,15 @@ import {
     Button,
     Flex,
     Heading,
-    Image,
+    Image, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay,
     Stack,
     Text,
-    useBreakpointValue,
+    useBreakpointValue, useDisclosure,
 } from '@chakra-ui/react';
+import Multistep from "./index.tsx";
 
 const SplitScreen: React.FC = () => {
+    const { isOpen, onOpen, onClose } = useDisclosure()
     return (
         <Stack minH="100vh" direction={{ base: 'column', md: 'row' }} bgColor={"white"}>
             <Flex p={8} flex={1} align="center" justify="center">
@@ -46,9 +48,26 @@ const SplitScreen: React.FC = () => {
                             _hover={{
                                 bg: 'blue.500',
                             }}
+                            onClick={onOpen}
                         >
                             Create Emulator
                         </Button>
+                        <Modal isOpen={isOpen} onClose={onClose}>
+                            <ModalOverlay />
+                            <ModalContent>
+                                <ModalHeader>Select Options</ModalHeader>
+                                <ModalCloseButton />
+                                <ModalBody>
+                                    <Multistep />
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button colorScheme='blue' mr={3} onClick={onClose}>
+                                        Close
+                                    </Button>
+                                    <Button variant='ghost'>Secondary Action</Button>
+                                </ModalFooter>
+                            </ModalContent>
+                        </Modal>
                         <Button rounded="full">How It Works</Button>
                     </Stack>
                 </Stack>
