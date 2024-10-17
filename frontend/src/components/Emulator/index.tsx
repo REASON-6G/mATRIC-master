@@ -65,13 +65,15 @@ export default function Multistep() {
                         </Flex>
                         {step === 3 ? (
                             <Button
+                                isLoading={false}
                                 w="7rem"
                                 colorScheme="red"
                                 variant="solid"
+                                loadingText='Submitting'
                                 onClick={() => {
                                     toast({
-                                        title: 'Account created.',
-                                        description: "We've created your account for you.",
+                                        title: 'Emulation created.',
+                                        description: "Your emulator is now running.",
                                         status: 'success',
                                         duration: 3000,
                                         isClosable: true,

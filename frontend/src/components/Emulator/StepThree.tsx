@@ -53,10 +53,10 @@ const Form3 = () => {
                         _dark={{
                             color: 'gray.50',
                         }}>
-                        About
+                        Description
                     </FormLabel>
                     <Textarea
-                        placeholder="you@example.com"
+                        placeholder="This emulator does..."
                         rows={3}
                         shadow="sm"
                         focusBorderColor="brand.400"

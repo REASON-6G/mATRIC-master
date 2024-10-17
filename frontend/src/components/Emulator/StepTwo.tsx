@@ -22,7 +22,7 @@ const Form2 = () => {
                     _dark={{
                         color: 'gray.50',
                     }}>
-                    Country / Region
+
                 </FormLabel>
                 <Select
                     id="country"
@@ -34,9 +34,9 @@ const Form2 = () => {
                     size="sm"
                     w="full"
                     rounded="md">
-                    <option>United States</option>
-                    <option>Canada</option>
-                    <option>Mexico</option>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
                 </Select>
             </FormControl>
 
@@ -50,7 +50,7 @@ const Form2 = () => {
                         color: 'gray.50',
                     }}
                     mt="2%">
-                    Street address
+
                 </FormLabel>
                 <Input
                     type="text"
@@ -75,7 +75,7 @@ const Form2 = () => {
                         color: 'gray.50',
                     }}
                     mt="2%">
-                    City
+
                 </FormLabel>
                 <Input
                     type="text"
@@ -100,7 +100,7 @@ const Form2 = () => {
                         color: 'gray.50',
                     }}
                     mt="2%">
-                    State / Province
+
                 </FormLabel>
                 <Input
                     type="text"
@@ -125,7 +125,7 @@ const Form2 = () => {
                         color: 'gray.50',
                     }}
                     mt="2%">
-                    ZIP / Postal
+
                 </FormLabel>
                 <Input
                     type="text"
