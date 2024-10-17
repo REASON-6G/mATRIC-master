@@ -74,6 +74,7 @@ function ItemsTable() {
               <Th>ID</Th>
               <Th>Title</Th>
               <Th>Description</Th>
+              <Th>Location</Th>
               <Th>Actions</Th>
             </Tr>
           </Thead>
@@ -100,6 +101,7 @@ function ItemsTable() {
                   <Td color={!item.description ? "ui.dim" : "inherit"}>
                     {item.description || "N/A"}
                   </Td>
+                  <Td>{item.data}</Td>
                   <Td>
                     <ActionsMenu type={"Item"} value={item} />
                   </Td>

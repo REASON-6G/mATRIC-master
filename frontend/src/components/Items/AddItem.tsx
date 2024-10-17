@@ -10,7 +10,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalOverlay, Select,
+  ModalOverlay,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
@@ -37,6 +37,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     defaultValues: {
       title: "",
       description: "",
+      data: "",
     },
   })
 
@@ -97,16 +98,25 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
                 type="text"
               />
             </FormControl>
-            <FormControl isDisabled={true} isRequired isInvalid={!!errors.supported_commands}>
+            <FormControl mt={4}>
+              <FormLabel htmlFor="location">Location</FormLabel>
+              <Input
+                id="location"
+                {...register("data")}
+                placeholder="Location"
+                type="text"
+              />
+            </FormControl>
+            {/*<FormControl isDisabled={true} isInvalid={!!errors.supported_commands}>
               <FormLabel htmlFor="supported_commands">Supported Commands</FormLabel>
                 <Select
                     id="supported_commands"
                     {...register("supported_commands", {
-                    required: "Supported commands are required.",
+
                     })}
                     placeholder="Select Commands"
                 ></Select>
-            </FormControl>
+            </FormControl>*/}
           </ModalBody>
 
           <ModalFooter gap={3}>

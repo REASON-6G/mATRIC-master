@@ -31,7 +31,7 @@ function Dashboard() {
           </Card>
         </Box>
         <Box pt={6} m={4}>
-            <SimpleGrid columns={{ sm: 1, md: 2, xl: 3 }}spacing={4}>
+            <SimpleGrid columns={{ sm: 1, md: 2, xl: 3 }} spacing={4}>
                 <NumberAccessPoints
                     label={"Available Access points"}
                     number={100}
