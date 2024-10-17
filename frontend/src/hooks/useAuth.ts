@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
@@ -9,7 +9,9 @@ import {
   LoginService,
   type UserPublic,
   UsersService,
+  type UserRegister,
 } from "../client"
+import useCustomToast from "./useCustomToast.ts";
 
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
@@ -18,23 +20,25 @@ const isLoggedIn = () => {
 const useAuth = () => {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const showToast = useCustomToast()
+  const queryClient = useQueryClient()
   const { data: user, isLoading } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
     enabled: isLoggedIn(),
   })
 
-  const signup = async (data: AccessToken) => {
-    const response = await UsersService.registerUser({
-      requestBody: data,
-    })
-    console.log(`User ${response.email} created successfully!`)
-  }
+  const signUpMutation = useMutation({
+    mutationFn: (data: UserRegister) =>
+        UsersService.registerUser({ requestBody: data }),
 
-  const signupMutation = useMutation({
-    mutationFn: signup,
     onSuccess: () => {
-      navigate({ to: "/" })
+      navigate({ to: "/login" })
+      showToast(
+          "Account created.",
+          "Your account has been created successfully.",
+          "success",
+      )
     },
     onError: (err: ApiError) => {
       let errDetail = (err.body as any)?.detail
@@ -43,11 +47,10 @@ const useAuth = () => {
         errDetail = err.message
       }
 
-      if (Array.isArray(errDetail)) {
-        errDetail = "Something went wrong"
-      }
-
-      setError(errDetail)
+      showToast("Something went wrong.", errDetail, "error")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
     },
   })
 
@@ -85,7 +88,7 @@ const useAuth = () => {
 
   return {
     loginMutation,
-    signupMutation,
+    signUpMutation,
     logout,
     user,
     isLoading,

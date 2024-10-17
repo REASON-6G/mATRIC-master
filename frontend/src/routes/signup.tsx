@@ -1,6 +1,6 @@
 import {
-    Box,
     Button,
+    Container,
     Flex,
     FormControl,
     FormErrorMessage,
@@ -8,17 +8,19 @@ import {
     Image,
     Input,
     Link,
-    Switch,
     Text,
-} from "@chakra-ui/react";
+} from "@chakra-ui/react"
+import {
+    Link as RouterLink,
+    createFileRoute,
+    redirect,
+} from "@tanstack/react-router"
+import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { Link as RouterLink, createFileRoute, redirect } from "@tanstack/react-router";
-
-import type { UserRegister } from "../client"
-import useAuth, { isLoggedIn } from "../hooks/useAuth.ts";
-import { emailPattern } from "../utils"
-import { type SubmitHandler, useForm } from "react-hook-form";
 import Logo from "/assets/images/logo.png"
+import type { UserRegister } from "../client"
+import useAuth, { isLoggedIn } from "../hooks/useAuth"
+import { confirmPasswordRules, emailPattern, passwordRules } from "../utils"
 
 export const Route = createFileRoute("/signup")({
     component: SignUp,
@@ -31,178 +33,132 @@ export const Route = createFileRoute("/signup")({
     },
 })
 
+interface UserRegisterForm extends UserRegister {
+    confirm_password: string
+}
+
 function SignUp() {
-    const { error, resetError, signupMutation } = useAuth()
+    const { signUpMutation } = useAuth()
     const {
         register,
         handleSubmit,
+        getValues,
         formState: { errors, isSubmitting },
-    } = useForm<UserRegister>({
+    } = useForm<UserRegisterForm>({
         mode: "onBlur",
         criteriaMode: "all",
         defaultValues: {
             email: "",
+            full_name: "",
             password: "",
+            confirm_password: "",
         },
     })
 
-    const onSubmit: SubmitHandler<UserRegister> = async (data) => {
-        if (isSubmitting) return
-
-        resetError()
-
-        try {
-            await signupMutation.mutateAsync(data)
-        } catch {
-            // error is handled by useAuth hook
-        }
+    const onSubmit: SubmitHandler<UserRegisterForm> = (data) => {
+        signUpMutation.mutate(data)
     }
 
     return (
-        <Flex
-            direction='column'
-            alignSelf='center'
-            justifySelf='center'
-            overflow='hidden'>
-            <Box
-                position='absolute'
-                minH={{ base: "70vh", md: "50vh" }}
-                w={{ md: "calc(100vw - 50px)" }}
-                borderRadius={{ md: "15px" }}
-                left='0'
-                right='0'
-                bgRepeat='no-repeat'
-                overflow='hidden'
-                zIndex='-1'
-                top='0'
-                bgSize='cover'
-                mx={{ md: "auto" }}
-                mt={{ md: "14px" }}></Box>
-            <Flex
-                direction='column'
-                textAlign='center'
-                justifyContent='center'
-                align='center'
-                mt='6.5rem'
-                mb='30px'>
-                <Text fontSize='4xl' color='white' fontWeight='bold'>
-                    Welcome!
-                </Text>
-            </Flex>
-            <Flex alignItems='center' justifyContent='center' mb='60px' mt='20px'>
-                <Flex
-                    direction='column'
-                    w='445px'
-                    background='transparent'
-                    borderRadius='15px'
-                    p='40px'
-                    mx={{ base: "100px" }}
-                    boxShadow='0 20px 27px 0 rgb(0 0 0 / 5%)'>
-                    <Text
-                        fontSize='xl'
-                        fontWeight='bold'
-                        textAlign='center'
-                        mb='22px'>
-                        Sign Up
-                    </Text>
+        <>
+            <Flex flexDir={{ base: "column", md: "row" }} justify="center" h="100vh">
+                <Container
+                    as="form"
+                    onSubmit={handleSubmit(onSubmit)}
+                    h="100vh"
+                    maxW="sm"
+                    alignItems="stretch"
+                    justifyContent="center"
+                    gap={4}
+                    centerContent
+                >
                     <Image
                         src={Logo}
-                        alt="mATRIC logo"
+                        alt="FastAPI logo"
                         height="auto"
                         maxW="2xs"
                         alignSelf="center"
                         mb={4}
                     />
-                    <FormControl
-                        onSubmit={handleSubmit(onSubmit)}
-                    >
-                        <FormLabel ms='4px' fontSize='sm' fontWeight='normal'>
-                            Name
+                    <FormControl id="full_name" isInvalid={!!errors.full_name}>
+                        <FormLabel htmlFor="full_name" srOnly>
+                            Full Name
                         </FormLabel>
                         <Input
-                            fontSize='sm'
-                            ms='4px'
-                            borderRadius='15px'
-                            type='text'
-                            placeholder='Your full name'
-                            mb='24px'
-                            size='lg'
+                            id="full_name"
+                            minLength={3}
+                            {...register("full_name", { required: "Full Name is required" })}
+                            placeholder="Full Name"
+                            type="text"
                         />
-                        <FormLabel ms='4px' fontSize='sm' fontWeight='normal'>
+                        {errors.full_name && (
+                            <FormErrorMessage>{errors.full_name.message}</FormErrorMessage>
+                        )}
+                    </FormControl>
+                    <FormControl id="email" isInvalid={!!errors.email}>
+                        <FormLabel htmlFor="username" srOnly>
                             Email
                         </FormLabel>
                         <Input
-                            id="username" isInvalid={!!errors.email || !!error}
+                            id="email"
                             {...register("email", {
+                                required: "Email is required",
                                 pattern: emailPattern,
                             })}
-                            fontSize='sm'
-                            ms='4px'
-                            borderRadius='15px'
-                            type='email'
-                            placeholder='Your email address'
-                            mb='24px'
-                            size='lg'
+                            placeholder="Email"
+                            type="email"
                         />
-                        <FormLabel ms='4px' fontSize='sm' fontWeight='normal'>
+                        {errors.email && (
+                            <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+                        )}
+                    </FormControl>
+                    <FormControl id="password" isInvalid={!!errors.password}>
+                        <FormLabel htmlFor="password" srOnly>
                             Password
                         </FormLabel>
                         <Input
-                            fontSize='sm'
-                            ms='4px'
-                            borderRadius='15px'
-                            type='password'
-                            placeholder='Your password'
-                            mb='24px'
-                            size='lg'
+                            id="password"
+                            {...register("password", passwordRules())}
+                            placeholder="Password"
+                            type="password"
                         />
-                        <FormControl display='flex' alignItems='center' mb='24px'>
-                            <Switch id='remember-login' colorScheme='teal' me='10px' />
-                            <FormLabel htmlFor='remember-login' mb='0' fontWeight='normal'>
-                                Remember me
-                            </FormLabel>
-                        </FormControl>
-                        <Button
-                            type="submit"
-                            isLoading={isSubmitting}
-                            bg='teal.300'
-                            fontSize='10px'
-                            color='white'
-                            fontWeight='bold'
-                            w='100%'
-                            h='45'
-                            mb='24px'
-                            _hover={{
-                                bg: "teal.200",
-                            }}
-                            _active={{
-                                bg: "teal.400",
-                            }}>
-                            SIGN UP
-                        </Button>
-                        {error && <FormErrorMessage>{error}</FormErrorMessage>}
+                        {errors.password && (
+                            <FormErrorMessage>{errors.password.message}</FormErrorMessage>
+                        )}
                     </FormControl>
-                    <Flex
-                        flexDirection='column'
-                        justifyContent='center'
-                        alignItems='center'
-                        maxW='100%'
-                        mt='0px'>
-                        <Text fontWeight='medium'>
-                            Already have an account?
-                            <Link
-                                as={RouterLink}
-                                top="/login"
-                                ms='5px'
-                                fontWeight='bold'>
-                                Sign In
-                            </Link>
-                        </Text>
-                    </Flex>
-                </Flex>
+                    <FormControl
+                        id="confirm_password"
+                        isInvalid={!!errors.confirm_password}
+                    >
+                        <FormLabel htmlFor="confirm_password" srOnly>
+                            Confirm Password
+                        </FormLabel>
+
+                        <Input
+                            id="confirm_password"
+                            {...register("confirm_password", confirmPasswordRules(getValues))}
+                            placeholder="Repeat Password"
+                            type="password"
+                        />
+                        {errors.confirm_password && (
+                            <FormErrorMessage>
+                                {errors.confirm_password.message}
+                            </FormErrorMessage>
+                        )}
+                    </FormControl>
+                    <Button variant="primary" type="submit" isLoading={isSubmitting}>
+                        Sign Up
+                    </Button>
+                    <Text>
+                        Already have an account?{" "}
+                        <Link as={RouterLink} to="/login" color="blue.500">
+                            Log In
+                        </Link>
+                    </Text>
+                </Container>
             </Flex>
-        </Flex>
-    );
+        </>
+    )
 }
 
-export default SignUp;
+export default SignUp

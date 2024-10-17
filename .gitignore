@@ -3,3 +3,6 @@ frontend/.env
 *.pyc
 /frontend/coverage
 /.idea
+.env
+.idea
+
