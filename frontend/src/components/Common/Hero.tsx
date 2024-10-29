@@ -1,15 +1,20 @@
 'use client'
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { FullscreenControl } from "react-map-gl";
+import { SearchBox } from '@mapbox/search-js-react';
 import {
-    Flex,Stack,
+    Flex, Stack, Table,
 } from '@chakra-ui/react'
 
 const MapMain = lazy(() => import('../Map/MapMain.tsx'));
 
 export default function Hero() {
     const initialViewState = { latitude: 51.4492, longitude: -2.5813, zoom: 3 }
+    const [address, setAddress] = useState('');
+    const handleChange = (value: string) => {
+        setAddress(value);
+    };
     // const [showPopup, setShowPopup] = useState<boolean>(true);
 
     const markers = [
@@ -20,14 +25,10 @@ export default function Hero() {
 
     const handleMarkerClick = (latitude: number, longitude: number) => {
         console.log(`Marker clicked at latitude: ${latitude}, longitude: ${longitude}`);
-        // {showPopup && (
-        //     <Popup longitude={-2.5813} latitude={51.4492}
-        //            anchor="bottom"
-        //            onClose={() => setShowPopup(false)}>
-        //         You are here
-        //     </Popup>)}
     };
 
+    // @ts-ignore
+    // @ts-ignore
     return (
 
         <Stack minH={'50vh'} direction={{ base: 'column', md: 'row'}}>
@@ -39,6 +40,21 @@ export default function Hero() {
                         onMarkerClick={handleMarkerClick}
                     >
                         <FullscreenControl />
+                        <SearchBox
+                            popoverOptions={{
+                                placement: 'bottom-start',
+                                flip: true,
+                                offset: 4,
+                            }}
+                            accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+                            onChange={handleChange}
+                            onSuggest={(result) => console.log(result)}
+                            onSuggestError={(error) => console.error(error)}
+                            onRetrieve={(result) => console.log(result)}
+                            value={address}
+                            marker={true}
+                            placeholder="Search for a access point or agent"
+                        />
                     </MapMain>
                 </Suspense>
             </Flex>
