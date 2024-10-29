@@ -1,4 +1,4 @@
-import { 
+/* import { 
     Flex, 
     NumberDecrementStepper, 
     NumberIncrementStepper, 
@@ -51,4 +51,4 @@ function SliderInput() {
     )
   }
 
-  export default SliderInput
+  export default SliderInput */
