@@ -4,8 +4,15 @@ import {
     GridItem,
     Heading,
     Input,
-    Select
+    InputGroup,
+    InputLeftAddon,
+    NumberDecrementStepper,
+    NumberIncrementStepper,
+    NumberInput,
+    NumberInputField,
+    NumberInputStepper,
 } from "@chakra-ui/react";
+import SliderInput from "./SliderInput";
 
 const Form2 = () => {
     return (
@@ -22,22 +29,15 @@ const Form2 = () => {
                     _dark={{
                         color: 'gray.50',
                     }}>
-
+                        No. of Access Points
                 </FormLabel>
-                <Select
-                    id="country"
-                    name="country"
-                    autoComplete="country"
-                    placeholder="Select option"
-                    focusBorderColor="brand.400"
-                    shadow="sm"
-                    size="sm"
-                    w="full"
-                    rounded="md">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                </Select>
+                <NumberInput defaultValue={1} min={0} max={100}>
+                    <NumberInputField />
+                    <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                    </NumberInputStepper>
+                </NumberInput>
             </FormControl>
 
             <FormControl as={GridItem} colSpan={6}>
@@ -52,17 +52,14 @@ const Form2 = () => {
                     mt="2%">
 
                 </FormLabel>
-                <Input
-                    type="text"
-                    name="street_address"
-                    id="street_address"
-                    autoComplete="street-address"
-                    focusBorderColor="brand.400"
-                    shadow="sm"
-                    size="sm"
-                    w="full"
-                    rounded="md"
-                />
+                No. of Users
+                <NumberInput defaultValue={10} min={1} max={10000}>
+                    <NumberInputField />
+                    <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                    </NumberInputStepper>
+                </NumberInput>
             </FormControl>
 
             <FormControl as={GridItem} colSpan={[6, 6, null, 2]}>
@@ -75,70 +72,38 @@ const Form2 = () => {
                         color: 'gray.50',
                     }}
                     mt="2%">
-
+                        User Traffic Limit
                 </FormLabel>
-                <Input
-                    type="text"
-                    name="city"
-                    id="city"
-                    autoComplete="city"
-                    focusBorderColor="brand.400"
-                    shadow="sm"
-                    size="sm"
-                    w="full"
-                    rounded="md"
-                />
+                <SliderInput />
             </FormControl>
-
-            <FormControl as={GridItem} colSpan={[6, 3, null, 2]}>
+            <FormControl as={GridItem} colSpan={[3, 2]}>
                 <FormLabel
-                    htmlFor="state"
                     fontSize="sm"
                     fontWeight="md"
                     color="gray.700"
                     _dark={{
                         color: 'gray.50',
-                    }}
-                    mt="2%">
-
+                    }}>
+                    Duration
                 </FormLabel>
-                <Input
-                    type="text"
-                    name="state"
-                    id="state"
-                    autoComplete="state"
-                    focusBorderColor="brand.400"
-                    shadow="sm"
-                    size="sm"
-                    w="full"
-                    rounded="md"
-                />
+                <InputGroup size="sm">
+                    <InputLeftAddon
+                        bg="gray.50"
+                        _dark={{
+                            bg: 'gray.800',
+                        }}
+                        color="gray.500"
+                        rounded="md">
+                        Time
+                    </InputLeftAddon>
+                    <Input
+                        placeholder='Select Date and Time'
+                        size='md'
+                        type='datetime-local'
+                    />
+                </InputGroup>
             </FormControl>
-
-            <FormControl as={GridItem} colSpan={[6, 3, null, 2]}>
-                <FormLabel
-                    htmlFor="postal_code"
-                    fontSize="sm"
-                    fontWeight="md"
-                    color="gray.700"
-                    _dark={{
-                        color: 'gray.50',
-                    }}
-                    mt="2%">
-
-                </FormLabel>
-                <Input
-                    type="text"
-                    name="postal_code"
-                    id="postal_code"
-                    autoComplete="postal-code"
-                    focusBorderColor="brand.400"
-                    shadow="sm"
-                    size="sm"
-                    w="full"
-                    rounded="md"
-                />
-            </FormControl>
+            
         </>
     )
 }
