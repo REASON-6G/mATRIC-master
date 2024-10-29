@@ -9,9 +9,15 @@ import {
     from "@chakra-ui/react"
 import React from "react"
 
+interface SliderValue {
+    value: string,
+}
+
 function SliderInput() {
-    const [value, setValue] = React.useState(0)
-    const handleChange = (value: number) => setValue(value)
+    // Fix needed
+    const [value, setValue] = React.useState<SliderValue | null>(null)
+    const handleChange = (value: string ) => setValue(value | null)
+    
   
     return (
       <Flex>

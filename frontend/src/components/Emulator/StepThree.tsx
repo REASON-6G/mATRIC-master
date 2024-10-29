@@ -1,11 +1,7 @@
 import {
     FormControl, FormHelperText,
     FormLabel,
-    GridItem,
     Heading,
-    Input,
-    InputGroup,
-    InputLeftAddon,
     SimpleGrid, Textarea
 } from "@chakra-ui/react";
 
