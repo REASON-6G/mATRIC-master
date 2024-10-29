@@ -12,7 +12,6 @@ import {
     NumberInputField,
     NumberInputStepper,
 } from "@chakra-ui/react";
-import SliderInput from "./SliderInput";
 
 const Form2 = () => {
     return (
@@ -74,7 +73,6 @@ const Form2 = () => {
                     mt="2%">
                         User Traffic Limit
                 </FormLabel>
-                <SliderInput />
             </FormControl>
             <FormControl as={GridItem} colSpan={[3, 2]}>
                 <FormLabel
