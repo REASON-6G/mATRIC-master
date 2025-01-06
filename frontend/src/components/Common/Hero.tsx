@@ -3,9 +3,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { FullscreenControl } from "react-map-gl";
 import { SearchBox } from '@mapbox/search-js-react';
-import {
-    Flex, Stack, Table,
-} from '@chakra-ui/react'
+import { Flex, Stack } from '@chakra-ui/react'
 
 const MapMain = lazy(() => import('../Map/MapMain.tsx'));
 
@@ -27,8 +25,7 @@ export default function Hero() {
         console.log(`Marker clicked at latitude: ${latitude}, longitude: ${longitude}`);
     };
 
-    // @ts-ignore
-    // @ts-ignore
+
     return (
 
         <Stack minH={'50vh'} direction={{ base: 'column', md: 'row'}}>
@@ -41,11 +38,6 @@ export default function Hero() {
                     >
                         <FullscreenControl />
                         <SearchBox
-                            popoverOptions={{
-                                placement: 'bottom-start',
-                                flip: true,
-                                offset: 4,
-                            }}
                             accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
                             onChange={handleChange}
                             onSuggest={(result) => console.log(result)}
