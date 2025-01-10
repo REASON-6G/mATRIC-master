@@ -47,10 +47,6 @@ class BaseAgent:
                 print("Refreshing token...")
                 self.authenticate()
 
-
-            if self.token_expiry and (self.token_expiry - datetime.utcnow()).total_seconds() < settings.token_refresh_threshold:
-                print("Refreshing token...")
-                self.authenticate()
         except Exception as e:
             print(str(e))
 
