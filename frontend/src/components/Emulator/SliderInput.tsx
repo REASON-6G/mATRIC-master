@@ -14,7 +14,7 @@ interface SliderValue {
 }
 
 function SliderInput() {
-    // Fix needed
+
     const [value, setValue] = React.useState<SliderValue | null>(null)
     const handleChange = (value: string ) => setValue(value | null)
     
