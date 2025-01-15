@@ -1,4 +1,4 @@
-import { 
+/* import { 
     Flex, 
     NumberDecrementStepper, 
     NumberIncrementStepper, 
@@ -14,7 +14,7 @@ interface SliderValue {
 }
 
 function SliderInput() {
-    // Fix needed
+
     const [value, setValue] = React.useState<SliderValue | null>(null)
     const handleChange = (value: string ) => setValue(value | null)
     
@@ -51,4 +51,4 @@ function SliderInput() {
     )
   }
 
-  export default SliderInput
+  export default SliderInput */

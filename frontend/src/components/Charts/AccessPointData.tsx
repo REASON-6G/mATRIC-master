@@ -12,7 +12,7 @@ const AccessPointActivity: React.FC = () => {
             trigger: 'axis'
         },
         legend: {
-            data:['', '']
+            data:['Active Point Activity', '']
         },
         toolbox: {
             show: true,
@@ -59,7 +59,7 @@ const AccessPointActivity: React.FC = () => {
             },
             {
                 type: 'category',
-                boundaryGap: true,
+                boundaryGap: false,
                 data: (function (){
                     let res = [];
                     let len = 50;
@@ -74,7 +74,7 @@ const AccessPointActivity: React.FC = () => {
             {
                 type: 'value',
                 scale: true,
-                name: '',
+                name: 'Bandwidth',
                 max: 20,
                 min: 0,
                 boundaryGap: [0.2, 0.2]
@@ -90,7 +90,7 @@ const AccessPointActivity: React.FC = () => {
         ],
         series: [
             {
-                name:'',
+                name:'Utilization Rate',
                 type:'bar',
                 xAxisIndex: 1,
                 yAxisIndex: 1,
@@ -108,7 +108,7 @@ const AccessPointActivity: React.FC = () => {
                 },
                 data:(function (){
                     let res = [];
-                    let len = 50;
+                    let len = 1000;
                     while (len--) {
                         res.push(Math.round(Math.random() * 1000));
                     }
@@ -116,12 +116,12 @@ const AccessPointActivity: React.FC = () => {
                 })()
             },
             {
-                name:'',
+                name:'Bandwidth',
                 type:'line',
                 data:(function (){
                     let res = [];
                     let len = 0;
-                    while (len < 50) {
+                    while (len < 500) {
                         // @ts-ignore
                         res.push((Math.random()*10 + 5).toFixed(1) - 0);
                         len++;
