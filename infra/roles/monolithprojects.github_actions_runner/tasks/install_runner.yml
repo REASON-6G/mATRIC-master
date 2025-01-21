@@ -1,0 +1,162 @@
+---
+- name: Create directory
+  ansible.builtin.file:
+    path: "{{ runner_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ runner_user_id.stdout }}"
+    group: "{{ runner_user_group_id.stdout }}"
+
+- name: Set runner_version variable (If latest)
+  ansible.builtin.set_fact:
+    runner_version: "{{ api_response.json.tag_name | regex_replace('^v', '') }}"
+  when: runner_version == "latest"
+
+- name: Check if desired version already installed
+  ansible.builtin.command: "grep -i {{ runner_version }} {{ runner_dir }}/bin/Runner.Listener.deps.json"
+  register: runner_installed
+  check_mode: false
+  changed_when: false
+  ignore_errors: true
+
+- name: Unarchive runner package
+  ansible.builtin.unarchive:
+    src: "https://github.com/{{ runner_download_repository }}/releases/download/v{{ runner_version }}/\
+          actions-runner-{{ runner_system }}-{{ github_actions_architecture }}-{{ runner_version }}.tar.gz"
+    dest: "{{ runner_dir }}/"
+    owner: "{{ runner_user_id.stdout }}"
+    group: "{{ runner_user_group_id.stdout }}"
+    remote_src: true
+    mode: "0755"
+  environment:
+    PATH: /usr/local/bin:/opt/homebrew/bin/:{{ ansible_facts.user_dir }}/bin:{{ ansible_facts.env.PATH }}
+  when: runner_version not in runner_installed.stdout or reinstall_runner
+
+- name: Configure custom env file if required
+  ansible.builtin.blockinfile:
+    path: "{{ runner_dir }}/.env"
+    block: "{{ custom_env }}"
+    owner: "{{ runner_user }}"
+    create: true
+    mode: "0755"
+    marker_begin: "# BEGIN ANSIBLE MANAGED BLOCK"
+    marker_end: "# END ANSIBLE MANAGED BLOCK"
+  when: custom_env is defined
+
+- name: Check if runner service name file exist
+  ansible.builtin.stat:
+    path: "{{ runner_dir }}/.service"
+  register: runner_service_file_path
+
+- name: Set complete GitHub url for repo runner
+  ansible.builtin.set_fact:
+    github_full_url: "{{ github_url }}/{{ github_owner | default(github_account) }}/{{ github_repo }}"
+  when: not runner_org and github_enterprise is not defined
+
+- name: Set complete GitHub url for org runner
+  ansible.builtin.set_fact:
+    github_full_url: "{{ github_url }}/{{ github_owner | default(github_account) }}"
+  when: runner_org | bool and github_enterprise is not defined
+
+- name: Set complete GitHub url for enterprise runner
+  ansible.builtin.set_fact:
+    github_full_url: "{{ github_url }}/enterprises/{{ github_enterprise }}"
+  when: github_enterprise is defined
+
+- name: Register runner  # noqa no-changed-when
+  environment:
+    RUNNER_ALLOW_RUNASROOT: "1"
+  ansible.builtin.command:
+    "{{ runner_dir }}/./config.sh \
+    --url {{ github_full_url }} \
+    --token {{ registration.json.token }} \
+    --name '{{ runner_name }}' \
+    --labels {{ runner_labels | join(',') }} \
+    --runnergroup {{ runner_group }} \
+    --unattended \
+    {{ runner_extra_config_args }}"
+  args:
+    chdir: "{{ runner_dir }}"
+  changed_when: true
+  become_user: "{{ runner_user }}"
+  become: true
+  no_log: "{{ hide_sensitive_logs | bool }}"
+  when: runner_name not in registered_runners.json.runners|map(attribute='name')|list
+
+- name: Replace registered runner  # noqa no-changed-when
+  environment:
+    RUNNER_ALLOW_RUNASROOT: "1"
+  ansible.builtin.command:
+    "{{ runner_dir }}/config.sh \
+    --url {{ github_full_url }} \
+    --token {{ registration.json.token }} \
+    --name '{{ runner_name }}' \
+    --labels {{ runner_labels | join(',') }} \
+    --unattended \
+    {{ runner_extra_config_args }} \
+    --replace"
+  args:
+    chdir: "{{ runner_dir }}"
+  changed_when: true
+  become_user: "{{ runner_user }}"
+  become: true
+  no_log: "{{ hide_sensitive_logs | bool }}"
+  when: >
+    runner_name in registered_runners.json.runners|map(attribute='name')|list and
+    reinstall_runner
+
+- name: Install service  # noqa no-changed-when
+  ansible.builtin.command: "./svc.sh install {{ runner_user }}"
+  args:
+    chdir: "{{ runner_dir }}"
+  changed_when: true
+  become: "{{ 'false' if ansible_facts.system == 'Darwin' else 'true' }}"
+  when: not runner_service_file_path.stat.exists
+
+- name: Read service name from file
+  ansible.builtin.slurp:
+    src: "{{ runner_dir }}/.service"
+  register: runner_service
+
+- name: START and enable Github Actions Runner service (Linux)  # noqa no-changed-when
+  ansible.builtin.command: "./svc.sh start"
+  args:
+    chdir: "{{ runner_dir }}"
+  become: true
+  no_log: "{{ hide_sensitive_logs | bool }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  changed_when: true
+  when: >
+    ansible_facts.system != 'Darwin' and
+    runner_state|lower == "started" and
+    ansible_facts.services[(runner_service.content | b64decode) | trim ]['state'] | default('stopped') != 'running'
+
+- name: START and enable Github Actions Runner service (macOS) # TODO: Idempotence
+  ansible.builtin.command: "./svc.sh start"  # noqa no-changed-when
+  args:
+    chdir: "{{ runner_dir }}"
+  become: false
+  no_log: "{{ hide_sensitive_logs | bool }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  changed_when: true
+  when: ansible_facts.system == 'Darwin' and runner_state|lower
+
+- name: STOP and disable Github Actions Runner service  # noqa no-changed-when
+  ansible.builtin.command: "./svc.sh stop"
+  args:
+    chdir: "{{ runner_dir }}"
+  changed_when: true
+  become: "{{ 'false' if ansible_distribution == 'MacOS' else 'true' }}"
+  no_log: "{{ hide_sensitive_logs | bool }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: runner_state|lower == "stopped"
+
+- name: Version changed - RESTART Github Actions Runner service
+  ansible.builtin.shell: "./svc.sh stop && sleep 5 && ./svc.sh start"
+  args:
+    chdir: "{{ runner_dir }}"
+  changed_when: true
+  become: "{{ 'false' if ansible_facts.system == 'Darwin' else 'true' }}"
+  no_log: "{{ hide_sensitive_logs | bool }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: runner_version not in runner_installed.stdout and not runner_state|lower == "stopped"

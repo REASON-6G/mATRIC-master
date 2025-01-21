@@ -1,0 +1,17 @@
+---
+  - name: "Github Runner Installer"
+    hosts: matrics
+    become: true
+
+    vars:
+      hide_sensitive_logs: false
+      github_account: REASON-6G
+      github_repo: mATRIC-master
+      runner_user: ubuntu
+      docker_users:
+        - ubuntu
+      runner_labels: "{{ labels }}"
+
+    roles:
+      - role: geerlingguy.docker
+      - role: monolithprojects.github_actions_runner

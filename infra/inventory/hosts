@@ -1,0 +1,5 @@
+[all:children]
+matrics
+
+[matrics]
+matric-staging ansible_host=13.42.92.107 description="mATRIC Staging"
