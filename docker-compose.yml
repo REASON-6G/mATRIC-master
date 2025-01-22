@@ -12,6 +12,16 @@ services:
       - DOCKER_INFLUXDB_INIT_ORG=matric
       - DOCKER_INFLUXDB_INIT_BUCKET=matric
 
+  portainer:
+    image: portainer/portainer
+    restart: always
+    command: --admin-password '${PORTAINER_PASSWORD_HASH?Variable not set}'
+    volumes:
+      - portainer-data:/data
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - "9000:9000"
+
   db:
     image: postgres:12
     restart: always
