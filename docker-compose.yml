@@ -1,4 +1,17 @@
 services:
+  influxdb:
+    image: influxdb:2
+    ports:
+      - "8086:8086"
+    volumes:
+      - app-influxdb-data:/var/lib/influxdb
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD?Variable not set}
+      - DOCKER_INFLUXDB_INIT_ORG=matric
+      - DOCKER_INFLUXDB_INIT_BUCKET=matric
+
   db:
     image: postgres:12
     restart: always
@@ -124,6 +137,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
 volumes:
   app-db-data:
+  app-influxdb-data:
 
 networks:
   traefik-public:
