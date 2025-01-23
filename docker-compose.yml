@@ -11,6 +11,18 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD?Variable not set}
       - DOCKER_INFLUXDB_INIT_ORG=matric
       - DOCKER_INFLUXDB_INIT_BUCKET=matric
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-http.rule=Host(`influx.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-https.rule=Host(`influx.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-influx-https.tls.certresolver=le
+      - traefik.http.services.${STACK_NAME?Variable not set}-influx.loadbalancer.server.port=8086
 
   db:
     image: postgres:12
