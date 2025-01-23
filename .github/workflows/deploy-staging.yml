@@ -19,12 +19,14 @@ jobs:
       INFLUXDB_PASSWORD: ${{ secrets.INFLUXDB_PASSWORD }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       FIRST_SUPERUSER: ${{ vars.FIRST_SUPERUSER }}
+      TRAEFIK_HASHED_PASSWORD: ${{ secrets.TRAEFIK_HASHED_PASSWORD_STAGING }}
       FIRST_SUPERUSER_PASSWORD: ${{ secrets.FIRST_SUPERUSER_PASSWORD }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       # SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      TRAEFIK_USERNAME: ${{ vars.TRAEFIK_USERNAME_STAGING }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
