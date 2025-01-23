@@ -27,6 +27,7 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       # SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       TRAEFIK_USERNAME: ${{ vars.TRAEFIK_USERNAME_STAGING }}
+      TRAEFIK_EMAIL: ${{ vars.EMAIL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
