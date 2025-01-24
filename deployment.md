@@ -1,21 +1,33 @@
 # Matric Project - Deployment
 
-You can deploy the project using Docker Compose to a remote server.
+## Prerequisites - setting up a server for deployment
 
-This project expects you to have a Traefik proxy handling communication to the outside world and HTTPS certificates.
+Configuration of a server is described in [infra/README.md](infra/README.md).
 
-You can use CI/CD (continuous integration and continuous deployment) systems to deploy automatically, there are already configurations to do it with GitHub Actions.
+## Deployment via Github CICD workflow
 
-But you have to configure a couple things first. 🤓
+From the mATRIC-master repository :-
 
-## Preparation
+* Actions -> Deploy to Staging -> Run Workflow
+
+This will build and run the mATRIC deployment on a github action runner.
+Variables and Secrets required for the environment are stored in GitHub/Settings/Secrets/Actions and override any defaults set in `.env`. The docker compose files are then used to bring up the environment with a traefik proxy.
+
+This is the core command used to bring up an environment :-
+
+* docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d
+
+See: .github/workflows/deploy-staging.yml
+
+
+## Manual Deployment
 
 * Have a remote server ready and available.
 * Configure the DNS records of your domain to point to the IP of the server you just created.
 * Configure a wildcard subdomain for your domain, so that you can have multiple subdomains for different services, e.g. `*.matric.uk`. This will be useful for accessing different components, like `traefik.matric.uk`, `adminer.matric.uk`, etc. And also for `staging`, like `staging.matric.uk`, `staging.adminer.matric.uk`, etc.
 * Install and configure [Docker](https://docs.docker.com/engine/install/) on the remote server (Docker Engine, not Docker Desktop).
 
-## Public Traefik
+### Public Traefik
 
 We need a Traefik proxy to handle incoming connections and HTTPS certificates.
 
