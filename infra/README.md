@@ -30,6 +30,8 @@ This is stored in an ansible vault and requires the vault password.
 
 * inventory/group_vars/all/vault
 
+NB. Some hosts are accessed using a PEM file (eg. matric-staging on EC2) and some using SSH passwords (eg matric-production nomadic node)
+
 ### Provisioning the server
 
 This will run the 'runner.yml' playbook which provisions and configures docker and the github runner.
