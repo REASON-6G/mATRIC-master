@@ -10,7 +10,7 @@ check: pat  ## Check playbook
 	ansible-playbook --check --ask-vault-pass playbooks/runner.yml
 
 install: ## Install runner
-	ansible-playbook --ask-vault-pass playbooks/runner.yml
+	ansible-playbook -K -k --ask-vault-pass playbooks/runner.yml
 
 inv:  ## List the inventory
 	ansible-inventory --ask-vault-pass --list
@@ -18,7 +18,7 @@ inv:  ## List the inventory
 # Development
 
 debug:  ## Run the debug playbook
-	ansible-playbook --ask-vault-pass playbooks/debug.yml
+	ansible-playbook -K -k --ask-vault-pass playbooks/debug.yml
 
 role: ## Make a new ansible role
 	ansible-galaxy init $1

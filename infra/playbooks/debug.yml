@@ -1,6 +1,6 @@
 ---
   - name: "Debug"
-    hosts: all
+    hosts: matrics
     gather_facts: yes
 
     tasks:
