@@ -1,0 +1,6 @@
+services:
+  frontend:
+    build:
+      args:
+        - VITE_API_URL=http://${DOMAIN?Variable not set}
+        - NODE_ENV=production
