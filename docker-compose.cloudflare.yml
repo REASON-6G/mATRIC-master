@@ -1,0 +1,14 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    restart: always
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=https://${DOMAIN?Variable not set}
+        - NODE_ENV=production
