@@ -20,16 +20,19 @@ class ConflictResolutionLayer:
         last_command = db_manager.get_last_command_for_agent(agent_id)
         print("last_command: ", last_command)
 
-        # if last_command:
-        #     last_command_time = last_command.last_command_time
-        #     # If the last command was sent within the cooldown period, reject the new command
-        #     if now - last_command_time < self.cooldown_period:
-        #         return False
-        # return True
+        if last_command:
+            last_command_time = last_command.timestamp
+            # If the last command was sent within the cooldown period, reject the new command
+            if now - last_command_time < self.cooldown_period:
+                return False
+        print("true")
+        return True
 
     def register_command(self, agent_id: str, command: str, db_manager: DatabaseManager):
         """
         Register the current command for the agent by saving it in the database using DatabaseManager.
         """
         # Step 2: Save the command using the DatabaseManager
+        print("register the command")
         db_manager.save_command_for_agent(agent_id, command)
+        print("after register the command")

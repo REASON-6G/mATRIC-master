@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     RABBITMQ_PORT: int = 5672
     RABBITMQ_VHOST: str = "mq"
     RABBITMQ_USER: str = "rabbit"
-    RABBITMQ_PASSWORD: str
+    RABBITMQ_PASSWORD: str = "rabbit"
     RABBITMQ_QUEUE: str = "access_point_stream"
 
     @computed_field  # type: ignore[misc]

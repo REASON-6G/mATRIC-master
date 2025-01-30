@@ -20,14 +20,13 @@ class InfluxDBWriter:
     def write_data(self, measurement: str, data: dict):
         """Write data to InfluxDB with dynamic fields."""
         try:
-            # Create a point with a dynamic measurement
             point = Point(measurement).tag("source", "agent").time(datetime.utcnow())
             for key, value in data.items():
                 point = point.field(key, value)
             
             # Write the point to the specified bucket
             self.write_api.write(bucket=self.bucket, record=point)
-            logging.info(f"Data written to InfluxDB: {data}")
+            logging.info(f"Data written to InfluxDB: {data}, Measurement: {measurement}")
         except Exception as e:
             logging.error(f"Failed to write data to InfluxDB: {e}")
 

@@ -27,10 +27,13 @@ class InfluxDBReader:
         Returns:
         - agent_data: The queried data from InfluxDB.
         """
+        # Dynamically construct the measurement name
+        measurement = f"agent/{agent_id}/data"
+
         query = (
             f'from(bucket: "{self.bucket}") '
             f'|> range(start: {start_time}, stop: {end_time}) '
-            f'|> filter(fn: (r) => r["_measurement"] == "agent_data" and r["agent_id"] == "{agent_id}")'
+            f'|> filter(fn: (r) => r["_measurement"] == "{measurement}")'
         )
 
         try:

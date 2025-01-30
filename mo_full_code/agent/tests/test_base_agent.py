@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
-from base_agent import BaseAgent
+from agent.base_agent import BaseAgent
 from settings import settings
 import time
 

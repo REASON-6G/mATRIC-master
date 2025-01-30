@@ -22,7 +22,6 @@ def send_callback(job_number: str, callback_url: str, data: list):
         print("callback_url: ", callback_url)
         logger.info(f"callback_url: {callback_url}")
         print("type(data)1: ", type(data))
-        # data =json.dumps(data)
         print("type(data)2: ", type(data))
         print("data: ", data)
         logger.info(f"data: {data}")
