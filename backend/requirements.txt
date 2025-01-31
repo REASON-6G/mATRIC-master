@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2
+passlib[bcrypt]
+python-jose
+python-dotenv
+influxdb-client
+pyyaml
+pymysql
+pydantic-settings
+email-validator
+python-multipart
+cryptography
+pika
+

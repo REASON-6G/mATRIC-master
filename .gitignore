@@ -1,8 +1,8 @@
 .vscode
-frontend/.env
 *.pyc
+/venv
+frontend/.env
 /frontend/coverage
 /.idea
 .env
 .idea
-

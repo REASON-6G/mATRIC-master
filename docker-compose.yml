@@ -16,14 +16,14 @@ services:
     image: postgres:12
     restart: always
     volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
+      - app-postgres-data:/var/lib/postgresql/data/pgdata
     env_file:
       - .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
-      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_DB=${POSTGRES_NAME?Variable not set}
 
   adminer:
     image: adminer
@@ -38,6 +38,7 @@ services:
     restart: always
     depends_on:
       - db
+      - mq
     env_file:
       - .env
     environment:
@@ -52,10 +53,10 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_SERVER=db
+      - POSTGRES_HOST=db
       - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
 
@@ -73,6 +74,17 @@ services:
       args:
         - VITE_API_URL=https://${DOMAIN?Variable not set}
         - NODE_ENV=production
+
+  mq:
+    image: rabbitmq:3-management
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+
 volumes:
-  app-db-data:
+  app-postgres-data:
   app-influxdb-data:
+ 
