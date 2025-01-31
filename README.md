@@ -43,31 +43,23 @@ This repository host the mATRIC software implementation platform, an intelligent
 
 ### Dashboard Login
 
-[API docs]
+[![Dashboard Login](img/login_screen.png)](https://github.com/REASON-6G/mATRIC-master)
 
-### Dashboard - Admin
+### Dashboard - Emulator
 
-[API docs]
+[![Dashboard Emulator](img/emulator.png)](https://github.com/REASON-6G/mATRIC-master)
 
-### Dashboard - Create User
+### Dashboard - Console
 
-[API docs]
+[![Dashboard Console](img/console.png)](https://github.com/REASON-6G/mATRIC-master)
 
-### Dashboard - Items
+### Access Points Globe Search
 
-[API docs]
-
-### Dashboard - User Settings
-
-[API docs]
-
-### Dashboard - Dark Mode
-
-[API docs]
+[![Access Points Globe Search](img/globe.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ### Interactive API Documentation
 
-[![API docs](img/docs.png)](https://github.com/REASON-RG/matric-joiner)
+[![API docs](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
 
 ## How To Use It
 
@@ -76,13 +68,13 @@ You can clone this repository as is.
 - Clone this repository manually:
 
 ```bash
-git clone git@github.com:REASON-6G/matric-joiner.git
+git clone https://github.com/REASON-6G/mATRIC-master.git
 ```
 
 - Enter into the new directory:
 
 ```bash
-cd matric-joiner
+cd matric-master
 ```
 
 - Push the code to your new repository:
@@ -91,7 +83,7 @@ cd matric-joiner
 git push -u origin master
 ```
 
-### Update From the Original Template
+### Update From the Original Repository
 
 After cloning the repository, and after doing changes, you might want to get the latest changes from master.
 
@@ -100,8 +92,8 @@ After cloning the repository, and after doing changes, you might want to get the
 ```bash
 git remote -v
 
-origin    git@github.com:REASON-6G/matric-joiner.git (fetch)
-origin    git@github.com:REASON-6G/matric-joiner.git (push)
+origin    https://github.com/REASON-6G/mATRIC-master.git (fetch)
+origin    https://github.com/REASON-6G/mATRIC-master.git (push)
 ```
 
 - Pull the latest changes without merging:

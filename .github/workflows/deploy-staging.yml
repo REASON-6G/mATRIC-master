@@ -1,6 +1,7 @@
 name: Deploy to Staging
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -12,19 +13,23 @@ jobs:
       - staging
     env:
       ENVIRONMENT: staging
-      DOMAIN: ${{ secrets.DOMAIN_STAGING }}
-      STACK_NAME: ${{ secrets.STACK_NAME_STAGING }}
+      DOMAIN: ${{ vars.DOMAIN_STAGING }}
+      EMAILS_FROM_EMAIL: ${{ vars.EMAILS_FROM_EMAIL }}
+      STACK_NAME: ${{ vars.STACK_NAME_STAGING }}
+      INFLUXDB_PASSWORD: ${{ secrets.INFLUXDB_PASSWORD }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      FIRST_SUPERUSER: ${{ secrets.FIRST_SUPERUSER }}
+      FIRST_SUPERUSER: ${{ vars.FIRST_SUPERUSER }}
+      TRAEFIK_HASHED_PASSWORD: ${{ secrets.TRAEFIK_HASHED_PASSWORD_STAGING }}
       FIRST_SUPERUSER_PASSWORD: ${{ secrets.FIRST_SUPERUSER_PASSWORD }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-      EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      TRAEFIK_USERNAME: ${{ vars.TRAEFIK_USERNAME_STAGING }}
+      TRAEFIK_EMAIL: ${{ vars.EMAIL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} build
-      - run: docker compose -f docker-compose.yml --project-name ${{ secrets.STACK_NAME_STAGING }} up -d
+      - run: docker compose -f docker-compose.yml -f docker-compose.traefik.yml --project-name ${{ vars.STACK_NAME_STAGING }} build
+      - run: docker compose -f docker-compose.yml -f docker-compose.traefik.yml --project-name ${{ vars.STACK_NAME_STAGING }} up -d

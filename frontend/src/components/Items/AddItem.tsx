@@ -37,6 +37,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     defaultValues: {
       title: "",
       description: "",
+      data: "",
     },
   })
 
@@ -44,7 +45,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     mutationFn: (data: ItemCreate) =>
       ItemsService.createItem({ requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Item created successfully.", "success")
+      showToast("Success!", "Access point created successfully.", "success")
       reset()
       onClose()
     },
@@ -97,6 +98,25 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
                 type="text"
               />
             </FormControl>
+            <FormControl mt={4}>
+              <FormLabel htmlFor="location">Location</FormLabel>
+              <Input
+                id="location"
+                {...register("data")}
+                placeholder="Location"
+                type="text"
+              />
+            </FormControl>
+            {/*<FormControl isDisabled={true} isInvalid={!!errors.supported_commands}>
+              <FormLabel htmlFor="supported_commands">Supported Commands</FormLabel>
+                <Select
+                    id="supported_commands"
+                    {...register("supported_commands", {
+
+                    })}
+                    placeholder="Select Commands"
+                ></Select>
+            </FormControl>*/}
           </ModalBody>
 
           <ModalFooter gap={3}>
