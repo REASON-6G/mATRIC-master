@@ -22,8 +22,8 @@ services:
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_NAME=${POSTGRES_NAME?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_DB=${POSTGRES_NAME?Variable not set}
 
   adminer:
     image: adminer
