@@ -73,6 +73,16 @@ services:
       args:
         - VITE_API_URL=https://${DOMAIN?Variable not set}
         - NODE_ENV=production
+
+  mq:
+    image: rabbitmq:3-management
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+
 volumes:
   app-db-data:
   app-influxdb-data:
