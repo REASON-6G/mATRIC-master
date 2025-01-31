@@ -2,7 +2,7 @@ import pika
 import logging
 
 class RabbitMQConnectionManager:
-    def __init__(self, host: str = "localhost", port: int = 5672, username: str = "guest", password: str = "guest"):
+    def __init__(self, host: str = "mq", port: int = 5672, username: str = "guest", password: str = "guest"):
         """
         Initialize the RabbitMQ connection manager with default or custom RabbitMQ server configurations.
 
@@ -26,7 +26,7 @@ class RabbitMQConnectionManager:
         try:
             self.logger.info("Connecting to RabbitMQ...")
             credentials = pika.PlainCredentials(self.username, self.password)
-            parameters = pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials)
+            parameters = pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials, virtual_host='mq')
             self.connection = pika.BlockingConnection(parameters)
             self.logger.info("Connected to RabbitMQ.")
         except Exception as e:

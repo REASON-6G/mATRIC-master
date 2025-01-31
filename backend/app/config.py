@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
 
     # CORS settings
-    backend_cors_origins: list = ["*"]
+    backend_cors_origins: str = ["*"]
 
     # Influxdb settings
     influxdb_config : Dict[str, Any] = {
