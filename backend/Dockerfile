@@ -19,10 +19,10 @@ ENV PYTHONPATH=/app
 
 COPY ./scripts/ /app/
 
-COPY alembic_old.ini /app/
+COPY alembic.ini /app/
 
 COPY ./prestart.sh /app/
 
 COPY ./tests-start.sh /app/
 
-COPY app_old /app/app
+COPY app /app/app
