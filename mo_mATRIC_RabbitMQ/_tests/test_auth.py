@@ -13,12 +13,12 @@ auth_manager = AuthManager()
 
 @pytest.fixture
 def db_mock():
-    with patch('app.database.DatabaseManager') as mock:
+    with patch('app_old.database.DatabaseManager') as mock:
         yield mock
 
 @pytest.fixture
 def settings_mock():
-    with patch('app.config.settings') as mock:
+    with patch('app_old.config.settings') as mock:
         yield mock
 
 def test_verify_password():
@@ -101,6 +101,6 @@ def test_get_current_user_dependency(db_mock, token):
     user = MagicMock(username="test_user")
     db_instance.get_user.return_value = user
 
-    with patch('app.auth.oauth2_scheme', return_value=token):
+    with patch('app_old.auth.oauth2_scheme', return_value=token):
         current_user = get_current_user(token=token, db=db_instance)
         assert current_user.username == "test_user"

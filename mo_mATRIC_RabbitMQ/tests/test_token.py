@@ -12,14 +12,14 @@ client = TestClient(app)
 
 # Define application's secret key and algorithm
 SECRET_KEY = "f4e26a5290b9762bdbe668c50f9003d14ed9a5dda5c79a53cc188fcb8d64979e"  # Use the same secret key as application
-ALGORITHM = "HS256"  # Ensure this matches the algorithm app uses
+ALGORITHM = "HS256"  # Ensure this matches the algorithm app_old uses
 
 @pytest.fixture
 def db_manager_mocks():
     """Provide mock implementations of database manager methods."""
-    with patch('app.database.DatabaseManager.get_user') as get_user, \
-         patch('app.database.DatabaseManager.get_agent_by_username') as get_agent_by_username, \
-         patch('app.database.DatabaseManager.get_third_party_app') as get_third_party_app:
+    with patch('app_old.database.DatabaseManager.get_user') as get_user, \
+         patch('app_old.database.DatabaseManager.get_agent_by_username') as get_agent_by_username, \
+         patch('app_old.database.DatabaseManager.get_third_party_app') as get_third_party_app:
 
         yield {
             'get_user': get_user,
@@ -100,7 +100,7 @@ def test_agent_login_failure(db_manager_mocks):
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect agent credentials"
 
-# Test third-party app login with correct credentials
+# Test third-party app_old login with correct credentials
 def test_third_party_app_login_success(db_manager_mocks):
     # Configure the mock for get_third_party_app
     db_manager_mocks['get_third_party_app'].return_value = ThirdPartyApps(
@@ -110,7 +110,7 @@ def test_third_party_app_login_success(db_manager_mocks):
         permissions={"read": True, "write": False}
     )
 
-    # Perform the login request for third-party app
+    # Perform the login request for third-party app_old
     response = client.post(
         "/token/?login_type=third_party_app",
         data={"username": "app1", "password": "key1", "grant_type": "password"}
@@ -121,9 +121,9 @@ def test_third_party_app_login_success(db_manager_mocks):
     assert "access_token" in response.json()
     assert response.json()["token_type"] == "bearer"
 
-# Test third-party app login with incorrect credentials
+# Test third-party app_old login with incorrect credentials
 def test_third_party_app_login_failure(db_manager_mocks):
-    # Configure the mock for get_third_party_app to return None (app not found)
+    # Configure the mock for get_third_party_app to return None (app_old not found)
     db_manager_mocks['get_third_party_app'].return_value = None
 
     # Perform the login request with incorrect credentials

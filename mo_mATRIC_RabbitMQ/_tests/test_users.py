@@ -8,17 +8,17 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_mock():
-    with patch('app.database.DatabaseManager') as mock:
+    with patch('app_old.database.DatabaseManager') as mock:
         yield mock
 
 @pytest.fixture
 def auth_manager_mock():
-    with patch('app.auth.auth_manager') as mock:
+    with patch('app_old.auth.auth_manager') as mock:
         yield mock
 
 @pytest.fixture
 def current_user_mock():
-    with patch('app.auth.get_current_user') as mock:
+    with patch('app_old.auth.get_current_user') as mock:
         yield mock
 
 def test_create_first_user(db_mock, auth_manager_mock):

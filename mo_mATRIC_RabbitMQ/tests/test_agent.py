@@ -14,7 +14,7 @@ client = TestClient(app)
 
 # Define application's secret key and algorithm
 SECRET_KEY = "f4e26a5290b9762bdbe668c50f9003d14ed9a5dda5c79a53cc188fcb8d64979e"  # Use the same secret key as application
-ALGORITHM = "HS256"  # Ensure this matches the algorithm app uses
+ALGORITHM = "HS256"  # Ensure this matches the algorithm app_old uses
 
 # Utility function to create a signed JWT
 def create_signed_jwt(payload: dict) -> str:
@@ -32,11 +32,11 @@ app.dependency_overrides[get_current_user] = override_get_current_user
 @pytest.fixture
 def db_manager_mocks():
     """Provide mock implementations of database manager methods."""
-    with patch('app.database.DatabaseManager.get_agent_by_username') as get_agent_by_username, \
-         patch('app.database.DatabaseManager.add_agent') as add_agent, \
-         patch('app.database.DatabaseManager.get_agent') as get_agent, \
-         patch('app.database.DatabaseManager.update_agent') as update_agent, \
-         patch('app.database.DatabaseManager.delete_agent') as delete_agent:
+    with patch('app_old.database.DatabaseManager.get_agent_by_username') as get_agent_by_username, \
+         patch('app_old.database.DatabaseManager.add_agent') as add_agent, \
+         patch('app_old.database.DatabaseManager.get_agent') as get_agent, \
+         patch('app_old.database.DatabaseManager.update_agent') as update_agent, \
+         patch('app_old.database.DatabaseManager.delete_agent') as delete_agent:
 
         yield {
             'get_agent_by_username': get_agent_by_username,
