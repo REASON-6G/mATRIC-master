@@ -9,11 +9,11 @@ class Settings(BaseSettings):
     admin_email: EmailStr
 
     # PostGres Database settings
-    db_username: str
-    db_password: str
-    db_host: str
-    db_port: int
-    db_name: str
+    postgres_username: str
+    postgres_password: str
+    postgres_host: str
+    postgres_port: int
+    postgres_name: str
 
     # JWT settings
     jwt_secret_key: str
