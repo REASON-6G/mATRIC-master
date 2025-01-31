@@ -5,8 +5,8 @@ from unittest.mock import patch, MagicMock
 
 
 def test_get_db():
-    # Patch SessionLocal in the context of app.database
-    with patch('app.database_session.SessionLocal', autospec=True) as mock_session_local:
+    # Patch SessionLocal in the context of app_old.database
+    with patch('app_old.database_session.SessionLocal', autospec=True) as mock_session_local:
         # Create a mock session
         mock_session = MagicMock()
         mock_session_local.return_value = mock_session

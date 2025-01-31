@@ -21,7 +21,7 @@ def admin_token():
 
 @pytest.fixture
 def third_party_app_token():
-    # Create a mock token for a third-party app with necessary permissions
+    # Create a mock token for a third-party app_old with necessary permissions
     token_data = {"sub": "thirdpartyapp", "roles": "third_party_app", "permissions": {"read": True}}
     return auth_manager.create_access_token(data=token_data)
 
@@ -29,7 +29,7 @@ def third_party_app_token():
 @pytest.fixture
 def mock_db():
     # Mock the database session
-    with patch('app.dependencies.get_db', autospec=True) as mock_get_db:
+    with patch('app_old.dependencies.get_db', autospec=True) as mock_get_db:
         db = MagicMock()
         mock_get_db.return_value = db
         yield db

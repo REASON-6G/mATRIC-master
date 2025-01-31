@@ -54,10 +54,10 @@ def test_create_third_party_app(db_manager, mock_session):
     # Setup: App does not exist initially
     mock_session.query().filter().first.return_value = None
 
-    # Create third-party app
+    # Create third-party app_old
     new_app = ThirdPartyApps(app_name="appXYZ", api_key="api_key_123", permissions={})
 
-    # Mock adding third-party app
+    # Mock adding third-party app_old
     db_manager.add_third_party_app = MagicMock(return_value=new_app)
 
     # Call the method under test

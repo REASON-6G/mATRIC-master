@@ -7,7 +7,7 @@ from app.utils.http_callback import send_callback
 
 # Define constants
 EMULATOR_CALLBACK_URL = "http://localhost:8000/callback/emulator"
-WSL_PLAYBOOKS_DIR = "/mnt/c/Users/hg24245/PycharmProjects/mATRIC/app/playbooks/"
+WSL_PLAYBOOKS_DIR = "/mnt/c/Users/hg24245/PycharmProjects/mATRIC/app_old/playbooks/"
 
 
 class EmulatorTaskSubscriberWindows:

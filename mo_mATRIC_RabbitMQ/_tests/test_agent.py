@@ -42,7 +42,7 @@ app.dependency_overrides[get_current_user] = override_get_current_user
 
 @pytest.fixture
 def auth_manager_mock():
-    with patch('app.auth.auth_manager') as mock:
+    with patch('app_old.auth.auth_manager') as mock:
         yield mock
 
 def test_create_agent(auth_manager_mock):

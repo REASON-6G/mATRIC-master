@@ -4,7 +4,7 @@ from app.database import SessionLocal
 from app.database_session import get_db
 
 def test_get_db():
-    with patch('app.database.SessionLocal') as mock_session:
+    with patch('app_old.database.SessionLocal') as mock_session:
         mock_session.return_value = MagicMock()
         generator = get_db()
         db = next(generator)
