@@ -7,7 +7,7 @@ from app.models import User, UserCreate
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
-# make sure all SQLModel models are imported (app.models) before initializing DB
+# make sure all SQLModel models are imported (app_old.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
 
 
@@ -17,8 +17,8 @@ def init_db(session: Session) -> None:
     # the tables un-commenting the next lines
     # from sqlmodel import SQLModel
 
-    # from app.core.engine import engine
-    # This works because the models are already imported and registered from app.models
+    # from app_old.core.engine import engine
+    # This works because the models are already imported and registered from app_old.models
     # SQLModel.metadata.create_all(engine)
 
     user = session.exec(

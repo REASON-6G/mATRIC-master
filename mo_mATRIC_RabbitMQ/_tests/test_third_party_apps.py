@@ -8,17 +8,17 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_mock():
-    with patch('app.database.DatabaseManager') as mock:
+    with patch('app_old.database.DatabaseManager') as mock:
         yield mock
 
 @pytest.fixture
 def auth_manager_mock():
-    with patch('app.auth.auth_manager') as mock:
+    with patch('app_old.auth.auth_manager') as mock:
         yield mock
 
 @pytest.fixture
 def current_user_mock():
-    with patch('app.auth.get_current_user') as mock:
+    with patch('app_old.auth.get_current_user') as mock:
         yield mock
 
 def test_create_third_party_app(db_mock, current_user_mock):
@@ -94,7 +94,7 @@ def test_delete_third_party_app(db_mock, current_user_mock):
     response = client.delete(f"/{app_name}")
     assert response.status_code == 200
     assert response.json()["status"] == "success"
-    assert response.json()["detail"] == f"Third-party app {app_name} deleted"
+    assert response.json()["detail"] == f"Third-party app_old {app_name} deleted"
 
 if __name__ == '__main__':
     pytest.main()

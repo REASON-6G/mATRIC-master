@@ -217,7 +217,7 @@ def test_get_all_agents(mock_session):
     assert result[0].ap_id == "agent1"
     assert result[1].ap_id == "agent2"
 
-# Test third-party app operations
+# Test third-party app_old operations
 def test_add_third_party_app(mock_session):
     db_manager = DatabaseManager(mock_session)
 
@@ -226,10 +226,10 @@ def test_add_third_party_app(mock_session):
     api_key = "apikey"
     permissions = {"read": True, "write": False}
 
-    # Mock third-party app instance to return when added
+    # Mock third-party app_old instance to return when added
     mock_app = ThirdPartyApps(id=uuid.uuid4(), app_name=app_name, api_key=api_key, permissions=permissions)
 
-    # Set the return value for querying the added app
+    # Set the return value for querying the added app_old
     mock_session.query.return_value.filter.return_value.first.return_value = None
 
     # Mock the add, commit, and refresh operations
@@ -254,7 +254,7 @@ def test_get_third_party_app(mock_session):
     # Define test data
     app_name = "app1"
 
-    # Mock third-party app instance
+    # Mock third-party app_old instance
     mock_app = ThirdPartyApps(id=uuid.uuid4(), app_name=app_name, api_key="apikey", permissions={"read": True, "write": False})
     mock_session.query.return_value.filter.return_value.first.return_value = mock_app
 
@@ -273,7 +273,7 @@ def test_update_third_party_app(mock_session):
     new_api_key = "newapikey"
     new_permissions = {"read": False, "write": True}
 
-    # Mock existing third-party app instance
+    # Mock existing third-party app_old instance
     mock_app = ThirdPartyApps(id=uuid.uuid4(), app_name=app_name, api_key="apikey", permissions={"read": True, "write": False})
     mock_session.query.return_value.filter.return_value.first.return_value = mock_app
 
@@ -292,7 +292,7 @@ def test_delete_third_party_app(mock_session):
     # Define test data
     app_name = "app1"
 
-    # Mock existing third-party app instance
+    # Mock existing third-party app_old instance
     mock_app = ThirdPartyApps(id=uuid.uuid4(), app_name=app_name, api_key="apikey", permissions={"read": True, "write": False})
     mock_session.query.return_value.filter.return_value.first.return_value = mock_app
 
@@ -307,7 +307,7 @@ def test_delete_third_party_app(mock_session):
 def test_get_all_third_party_apps(mock_session):
     db_manager = DatabaseManager(mock_session)
 
-    # Mock third-party app instances
+    # Mock third-party app_old instances
     mock_app1 = ThirdPartyApps(id=uuid.uuid4(), app_name="app1", api_key="apikey1", permissions={"read": True, "write": False})
     mock_app2 = ThirdPartyApps(id=uuid.uuid4(), app_name="app2", api_key="apikey2", permissions={"read": False, "write": True})
     mock_session.query.return_value.all.return_value = [mock_app1, mock_app2]

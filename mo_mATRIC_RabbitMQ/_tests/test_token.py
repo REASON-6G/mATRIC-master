@@ -8,17 +8,17 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_mock():
-    with patch('app.database.DatabaseManager') as mock:
+    with patch('app_old.database.DatabaseManager') as mock:
         yield mock
 
 @pytest.fixture
 def auth_manager_mock():
-    with patch('app.auth.auth_manager') as mock:
+    with patch('app_old.auth.auth_manager') as mock:
         yield mock
 
 @pytest.fixture
 def settings_mock():
-    with patch('app.config.settings') as mock:
+    with patch('app_old.config.settings') as mock:
         yield mock
 
 def test_login_user_success(db_mock, auth_manager_mock, settings_mock):

@@ -3,7 +3,7 @@ services:
     image: postgres:12
     restart: always
     volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
+      - app_old-db-data:/var/lib/postgresql/data/pgdata
     env_file:
       - .env
     environment:

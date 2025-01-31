@@ -11,7 +11,7 @@ from jose import jwt
 
 # Define application's secret key and algorithm
 SECRET_KEY = "f4e26a5290b9762bdbe668c50f9003d14ed9a5dda5c79a53cc188fcb8d64979e"  # Use the same secret key as application
-ALGORITHM = "HS256"  # Ensure this matches the algorithm app uses
+ALGORITHM = "HS256"  # Ensure this matches the algorithm app_old uses
 
 # Test password hashing and verification
 def test_password_hashing():
@@ -117,7 +117,7 @@ def test_authenticate_agent_failure(mock_db_manager):
 
     assert agent is None
 
-# Test third-party app authentication with correct credentials
+# Test third-party app_old authentication with correct credentials
 def test_authenticate_third_party_app_success(mock_db_manager):
     mock_db_manager.get_third_party_app.return_value = ThirdPartyApps(
         id="3",
@@ -131,7 +131,7 @@ def test_authenticate_third_party_app_success(mock_db_manager):
     assert app is not None
     assert app.app_name == "app1"
 
-# Test third-party app authentication with incorrect credentials
+# Test third-party app_old authentication with incorrect credentials
 def test_authenticate_third_party_app_failure(mock_db_manager):
     mock_db_manager.get_third_party_app.return_value = ThirdPartyApps(
         id="3",

@@ -1,41 +1,65 @@
-import sentry_sdk
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+from app.routes import users, agent, third_party_apps, token, agent_update
+from app.routes.agent_details import router as agent_details_router  # Route for agent details
+from app.routes.agent_data import router as agent_data_router  # Route for agent data
+from app.routes.send_command import router as send_command_router  # Route for sending commands
+from app.routes.agent_data_callback import router as agent_data_callback_router  # Agent data callback route
+from app.routes.agent_details_callback import router as agent_details_callback_router  # Agent details callback route
+from app.routes import emulator
+from app.config import settings
+from fastapi.openapi.utils import get_openapi
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.api.main import api_router
-from app.core.config import settings
+
+app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def custom_generate_unique_id(route: APIRoute) -> str:
-    """
-    Custom function to generate unique id for each route.
-    """
-    return f"{route.tags[0]}-{route.name}"
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="mATRIC API",
+        version="1.0.0",
+        description="Handles mATRIC calls",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
 
+app.openapi = custom_openapi
 
-if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
-    """
-    The Sentry SDK is initialized with the DSN from the settings and tracing is enabled.
-    """
-    sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
-
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    generate_unique_id_function=custom_generate_unique_id,
-)
-
-# Set all CORS enabled origins
-if settings.BACKEND_CORS_ORIGINS:
+# Set CORS enabled origins if specified in settings
+if settings.backend_cors_origins:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            str(origin).strip("/") for origin in settings.BACKEND_CORS_ORIGINS
-        ],
+        allow_origins=[settings.backend_cors_origins],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+# Include the routers from the routes folder
+app.include_router(token.router, prefix="/token", tags=["token"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(agent.router, prefix="/agents", tags=["agents"])
+app.include_router(third_party_apps.router, prefix="/third_party_apps", tags=["third_party_apps"])
+app.include_router(agent_update.router, prefix="/agent_update", tags=["agent_update"])
+app.include_router(agent_details_router, prefix="/agent_details", tags=["agent_details"])
+app.include_router(agent_data_router, prefix="/agent_data", tags=["agent_data"])
+app.include_router(send_command_router, prefix="/send_command", tags=["send_command"])
+app.include_router(emulator.router, prefix="/emulator", tags=["emulator"])
+# Include the callback routers
+app.include_router(agent_data_callback_router, prefix="/callback/agent_data", tags=["agent_data_callback"])
+app.include_router(agent_details_callback_router, prefix="/callback/agent_details", tags=["agent_details_callback"])
+app.include_router(agent_details_callback_router, prefix="/callback/emulator", tags=["emulator_callback"])
