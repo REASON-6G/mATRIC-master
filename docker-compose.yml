@@ -85,5 +85,6 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
 
 volumes:
-  app-db-data:
+  app-postgres-data:
   app-influxdb-data:
+ 
