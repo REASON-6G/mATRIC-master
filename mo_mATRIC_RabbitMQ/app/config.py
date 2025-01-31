@@ -23,41 +23,6 @@ class Settings(BaseSettings):
     # CORS settings
     backend_cors_origins: list = ["*"]
 
-    # WireMQ settings
-    ms_config: Dict[str, Any] = {
-        "name": "mapp_publisher",
-        "auth_url": "http://localhost:8080",
-        "realm": "reason-dev",
-        "certs_path": "protocol/openid-connect/certs",
-        "resource": "matching-service",
-        "client_secret_key": "iC6Rt95FQJEdpIdIPB60DvKhT9Zxp9oa",
-        "username": "mo_test_mapp",
-        "password": "ubuntu",
-        "host": "localhost",
-        "port": 16000,
-        "data_port": 16001,
-        "log_level": "info",
-        "socket_family": "inet",
-        "advertised_host": "host.docker.internal"
-    }
-
-    matching_service_config: Dict[str, Any] = {
-        "name": "messaging_service_subscriber",
-        "auth_url": "http://localhost:8080",
-        "realm": "reason-dev",
-        "certs_path": "protocol/openid-connect/certs",
-        "resource": "matching-service",
-        "client_secret_key": "iC6Rt95FQJEdpIdIPB60DvKhT9Zxp9oa",
-        "username": "mo_test_sub",
-        "password": "ubuntu",
-        "host": "localhost",
-        "port": 17001,
-        "data_port": 17002,
-        "log_level": "info",
-        "advertised_host": "host.docker.internal",
-        "socket_family": "inet"
-    }
-
     # Influxdb settings
     influxdb_config : Dict[str, Any] = {
         "influx_url": "http://localhost:8086",  # Adjust to your InfluxDB URL
