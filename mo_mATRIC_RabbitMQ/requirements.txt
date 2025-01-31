@@ -6,14 +6,11 @@ passlib[bcrypt]
 python-jose
 python-dotenv
 influxdb-client
-git+https://github.com/REASON-6G/wiremq-sdk.git
-git+https://github.com/REASON-6G/matching-service-client.git
-git+https://github.com/REASON-6G/wiremq.git
 pyyaml
-mariadb
-pymongo
 pymysql
 pydantic-settings
 email-validator
 python-multipart
 cryptography
+pika
+
