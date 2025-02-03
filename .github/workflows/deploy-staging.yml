@@ -17,6 +17,10 @@ jobs:
       EMAILS_FROM_EMAIL: ${{ vars.EMAILS_FROM_EMAIL }}
       STACK_NAME: ${{ vars.STACK_NAME_STAGING }}
       INFLUXDB_PASSWORD: ${{ secrets.INFLUXDB_PASSWORD }}
+      INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
+      INFLUXDB_URL: ${{ vars.INFLUXDB_URL }}
+      INFLUXDB_ORG: ${{ vars.INFLUXDB_ORG }}
+      INFLUXDB_BUCKET: ${{ vars.INFLUXDB_BUCKET }}
       JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       FIRST_SUPERUSER: ${{ vars.FIRST_SUPERUSER }}
