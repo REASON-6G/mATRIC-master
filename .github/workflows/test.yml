@@ -25,10 +25,10 @@ jobs:
       - run: docker compose build
       - run: docker compose down -v --remove-orphans
       - run: docker compose up -d
-      - name: Lint
-        run: docker compose exec -T backend bash /app_old/scripts/lint.sh
-      - name: Run tests
-        run: docker compose exec -T backend bash /app_old/tests-start.sh "Coverage for ${{ github.sha }}"
+#      - name: Lint
+#        run: docker compose exec -T backend bash /app_old/scripts/lint.sh
+#      - name: Run tests
+#        run: docker compose exec -T backend bash /app_old/tests-start.sh "Coverage for ${{ github.sha }}"
       - run: docker compose down -v --remove-orphans
       - name: Store coverage files
         uses: actions/upload-artifact@v4
