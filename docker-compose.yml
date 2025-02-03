@@ -9,8 +9,10 @@ services:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD?Variable not set}
-      - DOCKER_INFLUXDB_INIT_ORG=matric
+      - DOCKER_INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - DOCKER_INFLUXDB_INIT_ORG="University of Bristol"
       - DOCKER_INFLUXDB_INIT_BUCKET=matric
+      - DOCKER_INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
 
   db:
     image: postgres:12
