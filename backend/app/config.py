@@ -24,12 +24,10 @@ class Settings(BaseSettings):
     backend_cors_origins: str = ["*"]
 
     # Influxdb settings
-    influxdb_config : Dict[str, Any] = {
-        "influx_url": "http://localhost:8086",  # Adjust to your InfluxDB URL
-        "influx_org": "University of Bristol",
-        "influx_token": "D-VMUk_5WFeKXIg5x9L5NRIMI5CUpi6xrjCSMCi3mSeUPrWjH0oqo6Ci6m9MlqHgnGrD5UsqHkCZ5iM0iaMOcA==",
-        "influx_bucket": "MatchingServices"
-    }
+    influxdb_url: str = "http://localhost:8086"  # Adjust to your InfluxDB URL
+    influxdb_org: str = "University of Bristol"
+    influxdb_token: str = "D-VMUk_5WFeKXIg5x9L5NRIMI5CUpi6xrjCSMCi3mSeUPrWjH0oqo6Ci6m9MlqHgnGrD5UsqHkCZ5iM0iaMOcA==",
+    influxdb_bucket: str = "MatchingServices"
 
     class Config:
         env_file = ".env"
