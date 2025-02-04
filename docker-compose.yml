@@ -103,6 +103,10 @@ services:
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
       - SECRET_KEY=${SECRET_KEY?Variable not set}
       - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
