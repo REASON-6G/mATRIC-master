@@ -57,16 +57,40 @@ class BaseAgent:
     def send_data(self, data: Dict[str, Any]) -> None:
         try:
             self.refresh_token_if_needed()
-            # headers = {"Authorization": f"Bearer {self.token}"}
-            # response = requests.post(self.update_url, json=data, headers=headers)
-            # if response.status_code != 200:
-            #     print(f"Failed to send data: {response.status_code}, {response.text}")
-            print("Sent data: ", data)
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json"
+                }
+            
+            payload = {
+                "ap_id": self.ap_id,
+                "payload": data
+            }
+
+            response = requests.post(self.update_url, json=payload, headers=headers)
+            if response.status_code != 200:
+                print(f"Failed to send data: {response.status_code}, {response.text}")
+            else:
+                print("Data sent successfully", {response.status_code})
+
         except Exception as e:
             print(str(e))
 
     def collect_data(self) -> Dict[str, Any]:
         raise NotImplementedError("Subclasses should implement this method")
+        # try:
+            # data1 = self.get_data1()
+            # data2 = self.get_data2()
+
+            # return {
+                # "Timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                # "Data1": data1,
+                # "Data2": data2
+            # }
+        # except Exception as e:
+            # print(f"Error in collect_data: {e}")
+            # return {}
+        
 
     def run(self) -> None:
         try:
@@ -77,3 +101,6 @@ class BaseAgent:
                 time.sleep(self.update_interval)
         except Exception as e:
             print(str(e))
+
+if __name__ == "__main__":
+    BaseAgent().run()
