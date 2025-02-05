@@ -61,6 +61,12 @@ services:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
 
     build:
@@ -122,6 +128,12 @@ services:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
 
 volumes:
