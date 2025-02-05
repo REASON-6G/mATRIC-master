@@ -14,7 +14,6 @@ class InfluxDBWriter:
             token=settings.influxdb_token,
             org=settings.influxdb_org
         )
-        print(f"{settings.influxdb_token}")
         self.bucket = settings.influxdb_bucket
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
