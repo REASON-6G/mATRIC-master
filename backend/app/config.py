@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     influxdb_token: str = "D-VMUk_5WFeKXIg5x9L5NRIMI5CUpi6xrjCSMCi3mSeUPrWjH0oqo6Ci6m9MlqHgnGrD5UsqHkCZ5iM0iaMOcA==",
     influxdb_bucket: str = "MatchingServices"
 
+    # Rabbit MQ settings
+    rabbitmq_host: str
+    rabbitmq_port: str
+    rabbitmq_vhost: str
+    rabbitmq_queue: str
+    rabbitmq_user: str
+    rabbitmq_password: str
+
     class Config:
         env_file = ".env"
 

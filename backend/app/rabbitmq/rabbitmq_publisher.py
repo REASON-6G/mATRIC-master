@@ -2,11 +2,18 @@
 import pika
 import json
 from app.rabbitmq.rabbitmq_connection import RabbitMQConnectionManager
+from app.config import settings
 import logging
 
 class RabbitMQPublisher:
     def __init__(self, exchange: str = "default_exchange"):
-        self.connection_manager = RabbitMQConnectionManager()
+        self.connection_manager = RabbitMQConnectionManager(
+            host=settings.rabbitmq_host,
+            port=settings.rabbitmq_port,
+            username=settings.rabbitmq_user,
+            password=settings.rabbitmq_password,
+            vhost=settings.rabbitmq_vhost
+        )
         self.connection = self.connection_manager.get_connection()
         if not self.connection:
             raise RuntimeError("RabbitMQ connection could not be established")
