@@ -61,7 +61,7 @@ export type TokenData = {
 export type UserCreate = {
   username: string
   password: string
-  roles: Array<string>
+  roles?: Array<string> | null
 }
 
 export type UserUpdate = {
