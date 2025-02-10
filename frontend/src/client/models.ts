@@ -1,113 +1,76 @@
+export type Agent = {
+  id: string
+  ap_id: string
+  configuration: Record<string, unknown>
+}
 
-export type Body_login_login_access_token = {
-  login_type?: string | null
+export type AgentCreate = {
+  ap_id: string
+  password: string
+  configuration: Record<string, unknown>
+}
+
+export type AgentUpdate = {
+  password?: string | null
+  configuration?: Record<string, unknown> | null
+}
+
+export type Body_login_api_v1_token__post = {
+  grant_type?: string | null
   username: string
   password: string
-  role?: string | null
+  scope?: string
+  client_id?: string | null
+  client_secret?: string | null
 }
 
 export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
 
-export type ItemCreate = {
-  title: string
-  description?: string | null
-  data: string | null
-  supported_commands: Array<string> | null
+export type ThirdPartyApp = {
+  id: string
+  app_name: string
+  api_key: string
+  permissions: Record<string, unknown>
 }
 
-export type ItemPublic = {
-  title: string
-  description?: string | null
-  data: string | null
-  id: number
-  owner_id: number
+export type ThirdPartyAppCreate = {
+  app_name: string
+  api_key: string
+  permissions: Record<string, unknown>
 }
 
-export type ItemUpdate = {
-  title?: string | null
-  description?: string | null
-  data?: string | null
-}
-
-export type ItemsPublic = {
-  data: Array<ItemPublic>
-  count: number
-}
-
-export type Message = {
-  message: string
-}
-
-export type NewPassword = {
-  token: string
-  new_password: string
+export type ThirdPartyAppUpdate = {
+  api_key?: string | null
+  permissions?: Record<string, unknown> | null
 }
 
 export type Token = {
   access_token: string
-  token_type?: string
+  token_type: string
+  expires_in: number
 }
 
-export type UpdatePassword = {
-  current_password: string
-  new_password: string
+export type TokenData = {
+  username?: string | null
+  roles: string
+  scopes?: Array<string>
 }
 
 export type UserCreate = {
-  email: string
-  is_active?: boolean
-  is_superuser?: boolean
-  full_name?: string | null
+  username: string
   password: string
-}
-
-export type UserPublic = {
-  email: string
-  is_active?: boolean
-  is_superuser?: boolean
-  full_name?: string | null
-  id: number
-}
-
-export type UserRegister = {
-  email: string
-  password: string
-  full_name?: string | null
+  roles: Array<string>
 }
 
 export type UserUpdate = {
-  email?: string | null
-  is_active?: boolean
-  is_superuser?: boolean
-  full_name?: string | null
   password?: string | null
-}
-
-export type UserUpdateMe = {
-  full_name?: string | null
-  email?: string | null
-}
-
-export type UsersPublic = {
-  data: Array<UserPublic>
-  count: number
+  roles?: Array<string> | null
 }
 
 export type ValidationError = {
   loc: Array<string | number>
   msg: string
   type: string
-}
-
-export type Channel = {
-  type: string
-  name: string
-  alias: string
-  host: string
-  port: number
-  dest_host: string
-  dest_port: number
-  console_level?: number | null
 }
