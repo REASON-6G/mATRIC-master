@@ -25,8 +25,8 @@ const itemsSearchSchema = z.object({
   page: z.number().catch(1),
 })
 
-export const Route = createFileRoute("/_layout/items")({
-  component: Items,
+export const Route = createFileRoute("/_layout/agents")({
+  component: Agents,
   validateSearch: (search) => itemsSearchSchema.parse(search),
 })
 
@@ -130,7 +130,7 @@ function ItemsTable() {
   )
 }
 
-function Items() {
+function Agents() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
