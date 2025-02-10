@@ -48,7 +48,7 @@ export class LoginService {
       method: "POST",
       url: "/api/v1/token",
       formData: formData,
-      mediaType: "application/x-www-form-urlencoded",
+      mediaType: "application/form-data",
       errors: {
         422: `Validation Error`,
       },
@@ -286,9 +286,9 @@ export class UsersService {
     const { requestBody } = data
     return __request(OpenAPI, {
       method: "POST",
-      url: "/api/v1/users/signup",
+      url: "/api/v1/users/public",
       body: requestBody,
-      mediaType: "application/json",
+      mediaType: "raw",
       errors: {
         422: `Validation Error`,
       },
