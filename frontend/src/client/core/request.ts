@@ -113,10 +113,6 @@ export const getFormData = (
   return undefined
 }
 
-export const getLocation = () => {
-  
-}
-
 type Resolver<T> = (options: ApiRequestOptions) => Promise<T>
 
 export const resolve = async <T>(

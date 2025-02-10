@@ -1,4 +1,75 @@
-export const $Body_login_login_access_token = {
+export const $Agent = {
+  properties: {
+    id: {
+      type: "string",
+      isRequired: true,
+      format: "uuid",
+    },
+    ap_id: {
+      type: "string",
+      isRequired: true,
+    },
+    configuration: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+      isRequired: true,
+    },
+  },
+} as const
+
+export const $AgentCreate = {
+  properties: {
+    ap_id: {
+      type: "string",
+      isRequired: true,
+    },
+    password: {
+      type: "string",
+      isRequired: true,
+    },
+    configuration: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+      isRequired: true,
+    },
+  },
+} as const
+
+export const $AgentUpdate = {
+  properties: {
+    password: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    configuration: {
+      type: "any-of",
+      contains: [
+        {
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+  },
+} as const
+
+export const $Body_login_api_v1_token__post = {
   properties: {
     grant_type: {
       type: "any-of",
@@ -60,126 +131,77 @@ export const $HTTPValidationError = {
   },
 } as const
 
-export const $ItemCreate = {
+export const $ThirdPartyApp = {
   properties: {
-    title: {
-      type: "string",
-      isRequired: true,
-      maxLength: 255,
-      minLength: 1,
-    },
-    description: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-  },
-} as const
-
-export const $ItemPublic = {
-  properties: {
-    title: {
-      type: "string",
-      isRequired: true,
-      maxLength: 255,
-      minLength: 1,
-    },
-    description: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
     id: {
-      type: "number",
+      type: "string",
+      isRequired: true,
+      format: "uuid",
+    },
+    app_name: {
+      type: "string",
       isRequired: true,
     },
-    owner_id: {
-      type: "number",
+    api_key: {
+      type: "string",
       isRequired: true,
     },
-  },
-} as const
-
-export const $ItemUpdate = {
-  properties: {
-    title: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-          minLength: 1,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-    description: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-  },
-} as const
-
-export const $ItemsPublic = {
-  properties: {
-    data: {
-      type: "array",
+    permissions: {
+      type: "dictionary",
       contains: {
-        type: "ItemPublic",
+        properties: {},
       },
       isRequired: true,
     },
-    count: {
-      type: "number",
+  },
+} as const
+
+export const $ThirdPartyAppCreate = {
+  properties: {
+    app_name: {
+      type: "string",
+      isRequired: true,
+    },
+    api_key: {
+      type: "string",
+      isRequired: true,
+    },
+    permissions: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
       isRequired: true,
     },
   },
 } as const
 
-export const $Message = {
+export const $ThirdPartyAppUpdate = {
   properties: {
-    message: {
-      type: "string",
-      isRequired: true,
+    api_key: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
     },
-  },
-} as const
-
-export const $NewPassword = {
-  properties: {
-    token: {
-      type: "string",
-      isRequired: true,
-    },
-    new_password: {
-      type: "string",
-      isRequired: true,
-      maxLength: 40,
-      minLength: 8,
+    permissions: {
+      type: "any-of",
+      contains: [
+        {
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
+        },
+        {
+          type: "null",
+        },
+      ],
     },
   },
 } as const
@@ -192,222 +214,89 @@ export const $Token = {
     },
     token_type: {
       type: "string",
-      default: "bearer",
+      isRequired: true,
+    },
+    expires_in: {
+      type: "number",
+      isRequired: true,
     },
   },
 } as const
 
-export const $UpdatePassword = {
+export const $TokenData = {
   properties: {
-    current_password: {
-      type: "string",
-      isRequired: true,
-      maxLength: 40,
-      minLength: 8,
+    username: {
+      type: "any-of",
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
     },
-    new_password: {
+    roles: {
       type: "string",
       isRequired: true,
-      maxLength: 40,
-      minLength: 8,
+    },
+    scopes: {
+      type: "array",
+      contains: {
+        type: "string",
+      },
+      default: [],
     },
   },
 } as const
 
 export const $UserCreate = {
   properties: {
-    email: {
+    username: {
       type: "string",
       isRequired: true,
       format: "email",
-      maxLength: 255,
-    },
-    is_active: {
-      type: "boolean",
-      default: true,
-    },
-    is_superuser: {
-      type: "boolean",
-      default: false,
-    },
-    full_name: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
     },
     password: {
       type: "string",
       isRequired: true,
-      maxLength: 40,
-      minLength: 8,
     },
-  },
-} as const
-
-export const $UserPublic = {
-  properties: {
-    email: {
-      type: "string",
+    roles: {
+      type: "array",
+      contains: {
+        type: "string",
+      },
       isRequired: true,
-      format: "email",
-      maxLength: 255,
-    },
-    is_active: {
-      type: "boolean",
-      default: true,
-    },
-    is_superuser: {
-      type: "boolean",
-      default: false,
-    },
-    full_name: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-    id: {
-      type: "number",
-      isRequired: true,
-    },
-  },
-} as const
-
-export const $UserRegister = {
-  properties: {
-    email: {
-      type: "string",
-      isRequired: true,
-      format: "email",
-      maxLength: 255,
-    },
-    password: {
-      type: "string",
-      isRequired: true,
-      maxLength: 40,
-      minLength: 8,
-    },
-    full_name: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
     },
   },
 } as const
 
 export const $UserUpdate = {
   properties: {
-    email: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          format: "email",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-    is_active: {
-      type: "boolean",
-      default: true,
-    },
-    is_superuser: {
-      type: "boolean",
-      default: false,
-    },
-    full_name: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
     password: {
       type: "any-of",
       contains: [
         {
           type: "string",
-          maxLength: 40,
-          minLength: 8,
         },
         {
           type: "null",
         },
       ],
     },
-  },
-} as const
-
-export const $UserUpdateMe = {
-  properties: {
-    full_name: {
+    roles: {
       type: "any-of",
       contains: [
         {
-          type: "string",
-          maxLength: 255,
+          type: "array",
+          contains: {
+            type: "string",
+          },
         },
         {
           type: "null",
         },
       ],
-    },
-    email: {
-      type: "any-of",
-      contains: [
-        {
-          type: "string",
-          format: "email",
-          maxLength: 255,
-        },
-        {
-          type: "null",
-        },
-      ],
-    },
-  },
-} as const
-
-export const $UsersPublic = {
-  properties: {
-    data: {
-      type: "array",
-      contains: {
-        type: "UserPublic",
-      },
-      isRequired: true,
-    },
-    count: {
-      type: "number",
-      isRequired: true,
     },
   },
 } as const
