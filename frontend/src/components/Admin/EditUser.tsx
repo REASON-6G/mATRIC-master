@@ -19,7 +19,7 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   type ApiError,
-  type UserPublic,
+  type TokenData,
   type UserUpdate,
   UsersService,
 } from "../../client"
@@ -27,7 +27,7 @@ import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern } from "../../utils"
 
 interface EditUserProps {
-  user: UserPublic
+  user: TokenData
   isOpen: boolean
   onClose: () => void
 }
@@ -54,7 +54,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
 
   const mutation = useMutation({
     mutationFn: (data: UserUpdateForm) =>
-      UsersService.updateUser({ userId: user.id, requestBody: data }),
+      UsersService.updateUserApiV1UsersUsernamePut({ username: user.username, requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
       onClose()
@@ -93,19 +93,19 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
           <ModalHeader>Edit User</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isInvalid={!!errors.email}>
-              <FormLabel htmlFor="email">Email</FormLabel>
+            <FormControl isInvalid={!!errors.roles}>
+              <FormLabel htmlFor="email">Role</FormLabel>
               <Input
                 id="email"
-                {...register("email", {
-                  required: "Email is required",
+                {...register("roles", {
+                  required: "Role is required",
                   pattern: emailPattern,
                 })}
                 placeholder="Email"
                 type="email"
               />
-              {errors.email && (
-                <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+              {errors.roles && (
+                <FormErrorMessage>{errors.roles.message}</FormErrorMessage>
               )}
             </FormControl>
             <FormControl mt={4}>
