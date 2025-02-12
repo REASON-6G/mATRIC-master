@@ -65,6 +65,7 @@ export type UserCreate = {
 }
 
 export type UserUpdate = {
+  username?: string | null
   password?: string | null
   roles?: Array<string> | null
 }
