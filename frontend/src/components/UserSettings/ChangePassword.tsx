@@ -12,11 +12,11 @@ import {
 import { useMutation } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { type ApiError, type UpdatePassword, UsersService } from "../../client"
+import { type ApiError, type UserUpdate, UsersService } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import { confirmPasswordRules, passwordRules } from "../../utils"
 
-interface UpdatePasswordForm extends UpdatePassword {
+interface UpdatePasswordForm extends UserUpdate {
   confirm_password: string
 }
 
@@ -35,8 +35,8 @@ const ChangePassword = () => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: UpdatePassword) =>
-      UsersService.updatePasswordMe({ requestBody: data }),
+    mutationFn: (data: UserUpdate) =>
+      UsersService.updateUserApiV1UsersUsernamePut({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "Password updated.", "success")
       reset()
@@ -62,32 +62,32 @@ const ChangePassword = () => {
           as="form"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <FormControl isRequired isInvalid={!!errors.current_password}>
+          <FormControl isRequired isInvalid={!!errors.password}>
             <FormLabel color={color} htmlFor="current_password">
               Current Password
             </FormLabel>
             <Input
               id="current_password"
-              {...register("current_password")}
+              {...register("password")}
               placeholder="Password"
               type="password"
             />
-            {errors.current_password && (
+            {errors.password && (
               <FormErrorMessage>
-                {errors.current_password.message}
+                {errors.password.message}
               </FormErrorMessage>
             )}
           </FormControl>
-          <FormControl mt={4} isRequired isInvalid={!!errors.new_password}>
+          <FormControl mt={4} isRequired isInvalid={!!errors.password}>
             <FormLabel htmlFor="password">Set Password</FormLabel>
             <Input
               id="password"
-              {...register("new_password", passwordRules())}
+              {...register("password", passwordRules())}
               placeholder="Password"
               type="password"
             />
-            {errors.new_password && (
-              <FormErrorMessage>{errors.new_password.message}</FormErrorMessage>
+            {errors.password && (
+              <FormErrorMessage>{errors.password.message}</FormErrorMessage>
             )}
           </FormControl>
           <FormControl mt={4} isRequired isInvalid={!!errors.confirm_password}>
