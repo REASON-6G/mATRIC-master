@@ -44,16 +44,18 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      username: "",
+      email: "",
+      full_name: "",
       password: "",
       confirm_password: "",
-      roles:  Array<string>() || null,
+      is_superuser: false,
+      is_active: false,
     },
   })
 
   const mutation = useMutation({
     mutationFn: (data: UserCreate) =>
-      UsersService.createUserApiV1UsersPost({ requestBody: data }),
+      UsersService.createUser({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User created successfully.", "success")
       reset()
@@ -85,31 +87,31 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
           <ModalHeader>Add User</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isRequired isInvalid={!!errors.username}>
+            <FormControl isRequired isInvalid={!!errors.email}>
               <FormLabel htmlFor="email">Email</FormLabel>
               <Input
-                id="username"
-                {...register("username", {
+                id="email"
+                {...register("email", {
                   required: "Email is required",
                   pattern: emailPattern,
                 })}
                 placeholder="Email"
                 type="email"
               />
-              {errors.username && (
-                <FormErrorMessage>{errors.username.message}</FormErrorMessage>
+              {errors.email && (
+                <FormErrorMessage>{errors.email.message}</FormErrorMessage>
               )}
             </FormControl>
-            <FormControl mt={4} isInvalid={!!errors.username}>
+            <FormControl mt={4} isInvalid={!!errors.full_name}>
               <FormLabel htmlFor="name">Full name</FormLabel>
               <Input
                 id="name"
-                {...register("username")}
+                {...register("full_name")}
                 placeholder="Full name"
                 type="text"
               />
-              {errors.username && (
-                <FormErrorMessage>{errors.username.message}</FormErrorMessage>
+              {errors.full_name && (
+                <FormErrorMessage>{errors.full_name.message}</FormErrorMessage>
               )}
             </FormControl>
             <FormControl mt={4} isRequired isInvalid={!!errors.password}>
@@ -155,12 +157,12 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
             </FormControl>
             <Flex mt={4}>
               <FormControl>
-                <Checkbox {...register("roles")} colorScheme="teal">
+                <Checkbox {...register("is_superuser")} colorScheme="teal">
                   Is superuser?
                 </Checkbox>
               </FormControl>
               <FormControl>
-                <Checkbox {...register("roles")} colorScheme="teal">
+                <Checkbox {...register("is_active")} colorScheme="teal">
                   Is active?
                 </Checkbox>
               </FormControl>

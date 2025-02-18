@@ -1,21 +1,5 @@
-export type Agent = {
-  id: string
-  ap_id: string
-  configuration: Record<string, unknown>
-}
 
-export type AgentCreate = {
-  ap_id: string
-  password: string
-  configuration: Record<string, unknown>
-}
-
-export type AgentUpdate = {
-  password?: string | null
-  configuration?: Record<string, unknown> | null
-}
-
-export type Body_login_api_v1_token__post = {
+export type Body_login_login_access_token = {
   grant_type?: string | null
   username: string
   password: string
@@ -28,49 +12,104 @@ export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
 
-export type ThirdPartyApp = {
-  id: string
-  app_name: string
-  api_key: string
-  permissions: Record<string, unknown>
+export type ItemCreate = {
+  title: string
+  description?: string | null
+  data: string | null
+  supported_commands: Array<string> | null
 }
 
-export type ThirdPartyAppCreate = {
-  app_name: string
-  api_key: string
-  permissions: Record<string, unknown>
+export type ItemPublic = {
+  title: string
+  description?: string | null
+  data: string | null
+  id: number
+  owner_id: number
 }
 
-export type ThirdPartyAppUpdate = {
-  api_key?: string | null
-  permissions?: Record<string, unknown> | null
+export type ItemUpdate = {
+  title?: string | null
+  description?: string | null
+  data?: string | null
+}
+
+export type ItemsPublic = {
+  data: Array<ItemPublic>
+  count: number
+}
+
+export type Message = {
+  message: string
+}
+
+export type NewPassword = {
+  token: string
+  new_password: string
 }
 
 export type Token = {
   access_token: string
-  token_type: string
-  expires_in: number
+  token_type?: string
 }
 
-export type TokenData = {
-  username?: string | null
-  roles: string
-  scopes?: Array<string>
+export type UpdatePassword = {
+  current_password: string
+  new_password: string
 }
 
 export type UserCreate = {
-  username: string
+  email: string
+  is_active?: boolean
+  is_superuser?: boolean
+  full_name?: string | null
   password: string
-  roles?: Array<string> | null
+}
+
+export type UserPublic = {
+  email: string
+  is_active?: boolean
+  is_superuser?: boolean
+  full_name?: string | null
+  id: number
+}
+
+export type UserRegister = {
+  email: string
+  password: string
+  full_name?: string | null
 }
 
 export type UserUpdate = {
+  email?: string | null
+  is_active?: boolean
+  is_superuser?: boolean
+  full_name?: string | null
   password?: string | null
-  roles?: Array<string> | null
+}
+
+export type UserUpdateMe = {
+  full_name?: string | null
+  email?: string | null
+}
+
+export type UsersPublic = {
+  data: Array<UserPublic>
+  count: number
 }
 
 export type ValidationError = {
   loc: Array<string | number>
   msg: string
   type: string
+}
+
+export type Channel = {
+  type: string
+  name: string
+  alias: string
+  host: string
+  port: number
+  dest_host: string
+  dest_port: number
+  console_level?: number | null
 }
