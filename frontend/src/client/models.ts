@@ -1,5 +1,5 @@
 export type Agent = {
-  id: string
+  id: number
   ap_id: string
   configuration: Record<string, unknown>
 }
@@ -53,6 +53,7 @@ export type Token = {
 }
 
 export type TokenData = {
+  id: number
   username?: string | null
   roles: string
   scopes?: Array<string>
