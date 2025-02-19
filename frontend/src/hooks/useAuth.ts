@@ -9,9 +9,9 @@ import {
   TokenService,
   type TokenData,
   UsersService,
-  //type UserRegister,
+  type UserRegister,
 } from "../client"
-// import useCustomToast from "./useCustomToast.ts";
+import useCustomToast from "./useCustomToast.ts";
 
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
@@ -23,36 +23,37 @@ const useAuth = () => {
   // const showToast = useCustomToast()
   // const queryClient = useQueryClient()
   const { data: user, isLoading } = useQuery<TokenData | null, Error>({
+
     queryKey: ["currentUser"],
     queryFn: UsersService.readUsersMeApiV1UsersMeGet,
     enabled: isLoggedIn(),
   })
 
-  // const signUpMutation = useMutation({
-  //   mutationFn: (data: UserRegister) =>
-  //       UsersService.registerUser({ requestBody: data }),
-  //
-  //   onSuccess: () => {
-  //     navigate({ to: "/login" })
-  //     showToast(
-  //         "Account created.",
-  //         "Your account has been created successfully.",
-  //         "success",
-  //     )
-  //   },
-  //   onError: (err: ApiError) => {
-  //     let errDetail = (err.body as any)?.detail
-  //
-  //     if (err instanceof AxiosError) {
-  //       errDetail = err.message
-  //     }
-  //
-  //     showToast("Something went wrong.", errDetail, "error")
-  //   },
-  //   onSettled: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["users"] })
-  //   },
-  // })
+  const signUpMutation = useMutation({
+    mutationFn: (data: UserRegister) =>
+        UsersService.registerUser({ requestBody: data }),
+
+    onSuccess: () => {
+      navigate({ to: "/login" })
+      showToast(
+          "Account created.",
+          "Your account has been created successfully.",
+          "success",
+      )
+    },
+    onError: (err: ApiError) => {
+      let errDetail = (err.body as any)?.detail
+
+      if (err instanceof AxiosError) {
+        errDetail = err.message
+      }
+
+      showToast("Something went wrong.", errDetail, "error")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+  })
 
   const login = async (data: AccessToken) => {
     const response = await TokenService.loginApiV1TokenPost({
@@ -89,6 +90,7 @@ const useAuth = () => {
 
   return {
     loginMutation,
+    signUpMutation,
     logout,
     user,
     isLoading,

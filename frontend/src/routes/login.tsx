@@ -131,6 +131,9 @@ function Login() {
           Log In
         </Button>
         <Center>
+          <Link as={RouterLink} to="/signup" color="blue.500">
+            Don't have an account? Sign Up
+          </Link>
         </Center>
       </Container>
     </>
