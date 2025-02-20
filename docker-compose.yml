@@ -68,7 +68,8 @@ services:
       - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
-
+    ports:
+      - "8888:8888"
     build:
       context: ./backend
       args:
