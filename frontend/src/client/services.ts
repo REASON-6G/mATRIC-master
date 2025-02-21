@@ -603,4 +603,24 @@ export class AgentsService {
         },
       })
     }
+
+    /**
+     * Delete Agent
+     * Delete an agent.
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteAgent(data: { id: number }): CancelablePromise<Agent> {
+      const {id} = data
+      return __request(OpenAPI, {
+        method: "DELETE",
+        url: "/api/v1/agents/{id}",
+        query: {
+          id,
+        },
+        errors: {
+          422: `Validation Error`,
+        },
+      })
+    }
 }
