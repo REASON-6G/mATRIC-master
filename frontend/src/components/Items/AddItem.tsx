@@ -37,13 +37,18 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     defaultValues: {
       ap_id: "",
       password: "",
-      configuration: {},
+      configuration: {
+      location: "",
+      description: "",
+      },
     },
   })
 
   const mutation = useMutation({
     mutationFn: (data: AgentCreate) =>
-      AgentsService.createAgentApiV1AgentsPost({ requestBody: data }),
+      AgentsService.createAgent({
+      requestBody: data
+    }),
     onSuccess: () => {
       showToast("Success!", "Access point created successfully.", "success")
       reset()
@@ -93,7 +98,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
               <FormLabel htmlFor="description">Description</FormLabel>
               <Input
                 id="description"
-                {...register("description")}
+                {...register("configuration.description")}
                 placeholder="Description"
                 type="text"
               />
@@ -102,7 +107,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
               <FormLabel htmlFor="location">Location</FormLabel>
               <Input
                 id="location"
-                {...register("configuration")}
+                {...register("configuration.location")}
                 placeholder="Location"
                 type="text"
               />
