@@ -107,12 +107,13 @@ export type UserUpdate = {
 }
 
 export type UserUpdateMe = {
-  full_name?: string | null
-  email?: string | null
+  username?: string | null
+  password?: string | null
+  roles?: Array<string> | null
 }
 
 export type UsersPublic = {
-  data: Array<UserPublic>
+  data: Array<TokenData>
   count: number
 }
 
