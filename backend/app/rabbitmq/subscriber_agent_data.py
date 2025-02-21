@@ -12,7 +12,7 @@ from app.utils.influxdb_reader import InfluxDBReader
 from datetime import datetime
 
 # Constants
-CALLBACK_URL = "http://localhost:8000/callback/agent_data"
+CALLBACK_URL = "http://backend/callback/agent_data"
 
 class SubscriberAgentData:
     def __init__(self):
