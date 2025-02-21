@@ -1,14 +1,14 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
 import { AxiosError } from "axios"
 import {
-  type Body_login_api_v1_token__post as AccessToken,
+  type Body_login_login_access_token as AccessToken,
   type ApiError,
-  TokenService,
-  type TokenData,
+  LoginService,
   UsersService,
+  type TokenData,
   type UserRegister,
 } from "../client"
 import useCustomToast from "./useCustomToast.ts";
@@ -20,12 +20,12 @@ const isLoggedIn = () => {
 const useAuth = () => {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
-  // const showToast = useCustomToast()
-  // const queryClient = useQueryClient()
+  const showToast = useCustomToast()
+  const queryClient = useQueryClient()
   const { data: user, isLoading } = useQuery<TokenData | null, Error>({
 
     queryKey: ["currentUser"],
-    queryFn: UsersService.readUsersMeApiV1UsersMeGet,
+    queryFn: () => UsersService.readUserMe(),
     enabled: isLoggedIn(),
   })
 
@@ -56,7 +56,7 @@ const useAuth = () => {
   })
 
   const login = async (data: AccessToken) => {
-    const response = await TokenService.loginApiV1TokenPost({
+    const response = await LoginService.loginAccessToken({
       formData: data,
       loginType: "user",
     })

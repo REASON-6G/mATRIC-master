@@ -19,11 +19,12 @@ import type {
   ItemCreate,
   ItemPublic,
   ItemsPublic,
-  ItemUpdate,
+  ItemUpdate, TokenData,
 } from "./models"
 
 export type TDataLoginAccessToken = {
-  formData: Body_login_login_access_token
+  formData: Body_login_login_access_token,
+  loginType: string
 }
 export type TDataRecoverPassword = {
   email: string
@@ -214,7 +215,7 @@ export class UsersService {
    * @returns UserPublic Successful Response
    * @throws ApiError
    */
-  public static readUserMe(): CancelablePromise<UserPublic> {
+  public static readUserMe(): CancelablePromise<TokenData> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/users/me",
@@ -518,6 +519,28 @@ export class ItemsService {
   }
 }
 
+export type TDataCreateAgent = {
+  requestBody: AgentCreate
+}
+
+export type TDataReadAgents = {
+  limit?: number
+  skip?: number
+}
+export type TDataReadAgent = {
+  id: number
+}
+
+export type TDataUpdateAgent = {
+  id: number
+  requestBody: AgentUpdate
+}
+
+export type TDataDeleteAgent = {
+  id: number
+}
+
+
 export class AgentsService {
   /**
    * Create Agent
@@ -526,7 +549,7 @@ export class AgentsService {
    * @throws ApiError
    */
   public static createAgent(
-      data: AgentCreate,
+      data: TDataCreateAgent,
   ): CancelablePromise<Agent> {
     return __request(OpenAPI, {
       method: "POST",
@@ -546,7 +569,7 @@ export class AgentsService {
      * @throws ApiError
      */
     public static readAgents(
-        data: { limit?: number; skip?: number } = {},
+        data: TDataReadAgents,
     ): CancelablePromise<{ data: Agent[]; count: number }> {
         const { limit = 100, skip = 0 } = data
         return __request(OpenAPI, {
@@ -569,7 +592,7 @@ export class AgentsService {
      * @throws ApiError
      */
     public static readAgent(data: { id: number }): CancelablePromise<Agent> {
-      const {id} = data
+      const { id } = data
       return __request(OpenAPI, {
         method: "GET",
         url: "/api/v1/agents/{id}",
@@ -588,21 +611,39 @@ export class AgentsService {
      * @returns Agent Successful Response
      * @throws ApiError
      */
-    public static updateAgent(data: { id: number }): CancelablePromise<AgentUpdate> {
-      const {id} = data
+    public static updateAgent(data: TDataUpdateAgent): CancelablePromise<AgentUpdate> {
+      const { id, requestBody } = data
       return __request(OpenAPI, {
         method: "PATCH",
         url: "/api/v1/agents/{id}",
         query: {
           id,
         },
-        body: data,
+        body: { requestBody },
         mediaType: "application/json",
         errors: {
           422: `Validation Error`,
         },
       })
     }
+
+      public static updateItem(
+    data: TDataUpdateItem,
+  ): CancelablePromise<ItemPublic> {
+    const { id, requestBody } = data
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/api/v1/items/{id}",
+      path: {
+        id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    })
+  }
 
     /**
      * Delete Agent
@@ -611,7 +652,7 @@ export class AgentsService {
      * @throws ApiError
      */
     public static deleteAgent(data: { id: number }): CancelablePromise<Agent> {
-      const {id} = data
+      const { id } = data
       return __request(OpenAPI, {
         method: "DELETE",
         url: "/api/v1/agents/{id}",

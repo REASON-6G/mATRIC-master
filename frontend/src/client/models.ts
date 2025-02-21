@@ -12,12 +12,14 @@ export type AgentCreate = {
 }
 
 export type AgentUpdate = {
+  id: number
+  ap_id: string | number
   password?: string | null
   configuration?: Record<string, unknown> | null
 }
 
 export type Body_login_login_access_token = {
-  grant_type?: string | null
+  login_type?: string | null
   username: string
   password: string
   scope?: string
