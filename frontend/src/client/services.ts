@@ -3,12 +3,14 @@ import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 
 import type {
+  Agent,
+  AgentCreate,
+  AgentUpdate,
   Body_login_login_access_token,
   Message,
   NewPassword,
   Token,
   UserPublic,
-  UpdatePassword,
   UserCreate,
   UserRegister,
   UsersPublic,
@@ -144,9 +146,9 @@ export type TDataCreateUser = {
 export type TDataUpdateUserMe = {
   requestBody: UserUpdateMe
 }
-export type TDataUpdatePasswordMe = {
+/*export type TDataUpdatePasswordMe = {
   requestBody: UpdatePassword
-}
+}*/
 export type TDataRegisterUser = {
   requestBody: UserRegister
 }
@@ -259,7 +261,7 @@ export class UsersService {
    * @returns Message Successful Response
    * @throws ApiError
    */
-  public static updatePasswordMe(
+/*  public static updatePasswordMe(
     data: TDataUpdatePasswordMe,
   ): CancelablePromise<Message> {
     const { requestBody } = data
@@ -272,7 +274,7 @@ export class UsersService {
         422: `Validation Error`,
       },
     })
-  }
+  }*/
 
   /**
    * Register User
@@ -514,4 +516,91 @@ export class ItemsService {
       },
     })
   }
+}
+
+export class AgentsService {
+  /**
+   * Create Agent
+   * Create new agent.
+   * @returns Agent Successful Response
+   * @throws ApiError
+   */
+  public static createAgent(
+      data: AgentCreate,
+  ): CancelablePromise<Agent> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/agents/",
+      body: data,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    })
+  }
+
+    /**
+     * Read Agents
+     * Retrieve agents.
+     * @returns AgentsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readAgents(
+        data: { limit?: number; skip?: number } = {},
+    ): CancelablePromise<{ data: Agent[]; count: number }> {
+        const { limit = 100, skip = 0 } = data
+        return __request(OpenAPI, {
+            method: "GET",
+            url: "/api/v1/agents/",
+            query: {
+                skip,
+                limit,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        })
+    }
+
+    /**
+     * Read Agent
+     * Get agent by ID.
+     * @returns Agent Successful Response
+     * @throws ApiError
+     */
+    public static readAgent(data: { id: number }): CancelablePromise<Agent> {
+      const {id} = data
+      return __request(OpenAPI, {
+        method: "GET",
+        url: "/api/v1/agents/{id}",
+        query: {
+          id,
+        },
+        errors: {
+          422: `Validation Error`,
+        },
+      })
+    }
+
+    /**
+     * Update Agent
+     * Update an agent.
+     * @returns Agent Successful Response
+     * @throws ApiError
+     */
+    public static updateAgent(data: { id: number }): CancelablePromise<AgentUpdate> {
+      const {id} = data
+      return __request(OpenAPI, {
+        method: "PATCH",
+        url: "/api/v1/agents/{id}",
+        query: {
+          id,
+        },
+        body: data,
+        mediaType: "application/json",
+        errors: {
+          422: `Validation Error`,
+        },
+      })
+    }
 }
