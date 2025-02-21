@@ -91,7 +91,10 @@ const EditItem = ({ agent, isOpen, onClose }: EditItemProps) => {
                 />
                 {errors.configuration?.message && (  // Optional chaining for safer access
                   <FormErrorMessage>
-                    {errors.configuration.message || 'Invalid configuration'}
+                    {(() => {
+                      const errorMessage = errors.configuration?.message
+                      return typeof errorMessage === 'string' ? errorMessage : 'Invalid configuration'
+                    })()}
                   </FormErrorMessage>
                 )}
             </FormControl>
