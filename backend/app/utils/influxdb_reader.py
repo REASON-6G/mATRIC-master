@@ -8,22 +8,22 @@ class InfluxDBReader:
     def __init__(self):
         # Initialize the InfluxDB client
         self.client = InfluxDBClient(
-            url=settings.influxdb_config["influx_url"],
-            token=settings.influxdb_config["influx_token"],
-            org=settings.influxdb_config["influx_org"]
+            url=settings.influx_url,
+            token=settings.influx_token,
+            org=settings.influx_org
         )
-        self.bucket = settings.influxdb_config["influx_bucket"]
+        self.bucket = settings.influx_bucket
         self.logger = logging.getLogger(__name__)
 
     def query_agent_data(self, agent_id: str, start_time: str, end_time: str):
         """
         Query InfluxDB for data from a specific agent between the start_time and end_time.
-        
+
         Args:
         - agent_id: The ID of the agent whose data is being requested.
         - start_time: The start of the time range (ISO format).
         - end_time: The end of the time range (ISO format).
-        
+
         Returns:
         - agent_data: The queried data from InfluxDB.
         """
@@ -38,7 +38,7 @@ class InfluxDBReader:
 
         try:
             query_api = self.client.query_api()
-            result = query_api.query(org=settings.influxdb_config["influx_org"], query=query)
+            result = query_api.query(org=settings.influx_org, query=query)
 
             # Process the result into a more readable format
             agent_data = []
