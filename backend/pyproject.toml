@@ -2,7 +2,7 @@
 name = "app"
 version = "0.1.0"
 description = ""
-authors = ["Admin <admin@example.com>"]
+authors = ["Smart Internet Lab <vp24821@bristol.ac.uk>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -19,14 +19,18 @@ gunicorn = "^22.0.0"
 jinja2 = "^3.1.4"
 alembic = "^1.12.1"
 httpx = "^0.25.1"
-psycopg = {extras = ["binary"], version = "^3.1.13"}
-sqlmodel = "^0.0.19"
+psycopg2 = {extras = ["binary"], version = "^2.9.10"}
 # Pin bcrypt until passlib supports the latest
 bcrypt = "4.0.1"
 pydantic-settings = "^2.2.1"
-sentry-sdk = {extras = ["fastapi"], version = "^1.40.6"}
+sentry-sdk = {extras = ["fastapi"], version = "^2.16.0"}
 pyjwt = "^2.8.0"
 influxdb-client = "^1.48.0"
+sphinx-rtd-theme = "^2.0.0"
+sqlalchemy = "^2.0.37"
+psycopg = "^3.2.4"
+python-jose = "^3.3.0"
+pika = "^1.3.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

@@ -1,0 +1,128 @@
+---
+# All dependencies derived from https://github.com/actions/runner/blob/main/docs/start/envlinux.md
+- name: Install dependencies on Debian Stretch
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust0
+      - libkrb5-3
+      - zlib1g
+      - libssl1.1
+      - libicu57
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Debian" and ansible_facts.distribution_major_version == "9")
+
+- name: Install dependencies on Debian Buster
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust0
+      - libkrb5-3
+      - zlib1g
+      - libssl1.1
+      - libicu63
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Debian" and ansible_facts.distribution_major_version == "10")
+
+- name: Install dependencies on Debian Bullseye
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust0
+      - libkrb5-3
+      - zlib1g
+      - libssl1.1
+      - libicu67
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Debian" and ansible_facts.distribution_major_version == "11")
+
+- name: Install dependencies on Debian Bookworm
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust1
+      - libkrb5-3
+      - zlib1g
+      - libssl3
+      - libicu72
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Debian" and ansible_facts.distribution_major_version == "12")
+
+- name: Install dependencies on Ubuntu Xenial systems
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust0
+      - libkrb5-3
+      - zlib1g
+      - libssl1.0.0
+      - libicu55
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Ubuntu" and ansible_facts.distribution_major_version == "16")
+
+- name: Install dependencies on Ubuntu Bionic systems
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust0
+      - libkrb5-3
+      - zlib1g
+      - libssl1.1
+      - libicu60
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Ubuntu" and ansible_facts.distribution_major_version == "18")
+
+- name: Install dependencies on Ubuntu Focal systems
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust0
+      - libkrb5-3
+      - zlib1g
+      - libssl1.1
+      - libicu66
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Ubuntu" and ansible_facts.distribution_major_version == "20")
+
+- name: Install dependencies on Ubuntu Jammy systems
+  ansible.builtin.package:
+    pkg:
+      - acl
+      - liblttng-ust1
+      - libkrb5-3
+      - zlib1g
+      - libicu70
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "Ubuntu" and ansible_facts.distribution_major_version == "22")
+
+- name: Install dependencies on RHEL/CentOS/Fedora systems
+  ansible.builtin.package:
+    name:
+      - lttng-ust
+      - openssl-libs
+      - krb5-libs
+      - zlib
+      - libicu
+    state: present
+    update_cache: true
+  become: true
+  when: (ansible_facts.distribution == "RedHat") or
+        (ansible_facts.distribution == "CentOS") or
+        (ansible_facts.distribution == "Fedora") or
+        (ansible_facts.distribution == "Rocky")

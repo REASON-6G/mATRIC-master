@@ -11,16 +11,26 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as SignupImport } from './routes/signup'
 import { Route as ResetPasswordImport } from './routes/reset-password'
 import { Route as RecoverPasswordImport } from './routes/recover-password'
 import { Route as LoginImport } from './routes/login'
+import { Route as HomeImport } from './routes/home'
+import { Route as DocumentationImport } from './routes/documentation'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutItemsImport } from './routes/_layout/items'
+import { Route as LayoutEmulatorImport } from './routes/_layout/emulator'
+import { Route as LayoutDocsImport } from './routes/_layout/docs'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 // Create/Update Routes
+
+const SignupRoute = SignupImport.update({
+  path: '/signup',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const ResetPasswordRoute = ResetPasswordImport.update({
   path: '/reset-password',
@@ -34,6 +44,16 @@ const RecoverPasswordRoute = RecoverPasswordImport.update({
 
 const LoginRoute = LoginImport.update({
   path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HomeRoute = HomeImport.update({
+  path: '/home',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DocumentationRoute = DocumentationImport.update({
+  path: '/documentation',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -57,6 +77,16 @@ const LayoutItemsRoute = LayoutItemsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutEmulatorRoute = LayoutEmulatorImport.update({
+  path: '/emulator',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutDocsRoute = LayoutDocsImport.update({
+  path: '/docs',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutAdminRoute = LayoutAdminImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
@@ -68,6 +98,14 @@ declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/_layout': {
       preLoaderRoute: typeof LayoutImport
+      parentRoute: typeof rootRoute
+    }
+    '/documentation': {
+      preLoaderRoute: typeof DocumentationImport
+      parentRoute: typeof rootRoute
+    }
+    '/home': {
+      preLoaderRoute: typeof HomeImport
       parentRoute: typeof rootRoute
     }
     '/login': {
@@ -82,8 +120,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordImport
       parentRoute: typeof rootRoute
     }
+    '/signup': {
+      preLoaderRoute: typeof SignupImport
+      parentRoute: typeof rootRoute
+    }
     '/_layout/admin': {
       preLoaderRoute: typeof LayoutAdminImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/docs': {
+      preLoaderRoute: typeof LayoutDocsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/emulator': {
+      preLoaderRoute: typeof LayoutEmulatorImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/items': {
@@ -106,13 +156,18 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
+    LayoutDocsRoute,
+    LayoutEmulatorRoute,
     LayoutItemsRoute,
     LayoutSettingsRoute,
     LayoutIndexRoute,
   ]),
+  DocumentationRoute,
+  HomeRoute,
   LoginRoute,
   RecoverPasswordRoute,
   ResetPasswordRoute,
+  SignupRoute,
 ])
 
 /* prettier-ignore-end */

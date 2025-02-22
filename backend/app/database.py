@@ -95,7 +95,7 @@ class DatabaseManager:
     def get_all_agents(self):
         return self.db.query(AgentModel).all()
 
-    # Third-party app_old operations
+    # Third-party app operations
     def get_third_party_app(self, app_name: str):
         return self.db.query(ThirdPartyAppModel).filter(ThirdPartyAppModel.app_name == app_name).first()
 

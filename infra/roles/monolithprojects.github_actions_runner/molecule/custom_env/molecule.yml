@@ -1,0 +1,39 @@
+---
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      verbosity: 0
+  playbooks:
+      converge: converge.yml
+      cleanup: cleanup.yml
+      verify: verify.yml
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: "${MOLECULE_IMAGE:-ubuntu22}-latest"
+    image: "${namespace:-monolithprojects}/systemd-${MOLECULE_IMAGE:-ubuntu22}:latest"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:${MOLECULE_DOCKER_VOLUMES:-rw}" # Use "ro" for cgroup v1 and "rw" for cgroup v2
+    cgroupns_mode: ${MOLECULE_DOCKER_CGROUPS_MODE:-"host"} # Use "private" for cgroup v1 and "host" for cgroup v2
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    privileged: true
+    pre_build_image: true
+verifier:
+  name: ansible
+scenario:
+  name: custom_env
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy

@@ -113,7 +113,7 @@ class AuthManager:
         print("yes")
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate third-party app_old credentials",
+            detail="Could not validate third-party app credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
         try:
@@ -134,7 +134,7 @@ class AuthManager:
     # New unified authentication function
     def get_authenticated_user_or_app(self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db_manager)) -> TokenData:
         """
-        Unified authentication function that validates the token for both user and third-party app_old.
+        Unified authentication function that validates the token for both user and third-party app.
         """
         try:
             print("either or")
@@ -151,13 +151,13 @@ class AuthManager:
             if not sub or not scope:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token structure")
 
-            # Check if it's a user or third-party app_old based on scope
+            # Check if it's a user or third-party app based on scope
             if scope == "user":
                 print("or_app user: ")
                 return get_current_user(token, db)  # Validate as a user
             elif scope == "third_party_app":
                 print("or_app third_party_app: ")
-                return get_current_third_party_app(token, db)  # Validate as a third-party app_old
+                return get_current_third_party_app(token, db)  # Validate as a third-party app
             else:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token scope")
 
@@ -174,7 +174,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: DatabaseManager = 
 def get_current_agent(token: str = Depends(oauth2_scheme), db: DatabaseManager = Depends(get_db_manager))-> TokenData:
     return auth_manager.get_current_agent(token, db)
 
-# Dependency to get the current third-party app_old
+# Dependency to get the current third-party app
 def get_current_third_party_app(token: str = Depends(oauth2_scheme), db: DatabaseManager = Depends(get_db_manager))-> TokenData:
     return auth_manager.get_current_third_party_app(token, db)
 

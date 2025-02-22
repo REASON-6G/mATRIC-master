@@ -1,4 +1,5 @@
 from rabbitmq_connection import RabbitMQConnectionManager
+from app.config import settings
 import logging
 import json
 from typing import Callable
@@ -15,7 +16,13 @@ class RabbitMQConsumer:
         print("consumer.py queue_name: ", self.queue_name)
         self.exchange = exchange
         print("consumer.py exchange: ", self.exchange)
-        self.connection_manager = RabbitMQConnectionManager()
+        self.connection_manager = RabbitMQConnectionManager(
+            host=settings.rabbitmq_host,
+            port=settings.rabbitmq_port,
+            username=settings.rabbitmq_user,
+            password=settings.rabbitmq_password,
+            vhost=settings.rabbitmq_vhost
+        )
         self.connection = self.connection_manager.get_connection()
         if not self.connection:
             raise RuntimeError("RabbitMQ connection could not be established")

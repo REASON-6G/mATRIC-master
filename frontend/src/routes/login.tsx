@@ -78,7 +78,7 @@ function Login() {
       >
         <Image
           src={Logo}
-          alt="FastAPI logo"
+          alt="mATRIC logo"
           height="auto"
           maxW="2xs"
           alignSelf="center"
@@ -130,6 +130,11 @@ function Login() {
         <Button variant="primary" type="submit" isLoading={isSubmitting}>
           Log In
         </Button>
+        <Center>
+          <Link as={RouterLink} to="/signup" color="blue.500">
+            Don't have an account? Sign Up
+          </Link>
+        </Center>
       </Container>
     </>
   )

@@ -10,11 +10,11 @@ class InfluxDBWriter:
     def __init__(self):
         """Initialize the InfluxDB client and write API."""
         self.client = InfluxDBClient(
-            url=settings.influxdb_config["influx_url"],
-            token=settings.influxdb_config["influx_token"],
-            org=settings.influxdb_config["influx_org"]
+            url=settings.influxdb_url,
+            token=settings.influxdb_token,
+            org=settings.influxdb_org
         )
-        self.bucket = settings.influxdb_config["influx_bucket"]
+        self.bucket = settings.influxdb_bucket
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
     def write_data(self, measurement: str, data: dict):
