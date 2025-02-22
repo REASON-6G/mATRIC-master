@@ -10,7 +10,7 @@ from datetime import datetime
 
 
 # Constants
-CALLBACK_URL = "http://backend/api/v1/callback/agent_data"
+WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{}"
 
 
 class SubscriberAgentData:
