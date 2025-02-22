@@ -670,7 +670,7 @@ export class WebSocketService {
   private socket: WebSocket | null = null;
   private messageCallbacks: ((message: WebSocketMessage) => void)[] = [];
 
-  constructor(private baseUrl: string = 'ws://127.0.0.1:8000') {}
+  constructor(private baseUrl: string = 'wss://nn-athena.matric.uk/api/v1/callback/agent_data/') {}
 
   connect(jobNumber: string): Promise<void> {
     return new Promise((resolve, reject) => {
