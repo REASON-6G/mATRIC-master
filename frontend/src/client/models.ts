@@ -133,3 +133,13 @@ export type Channel = {
   dest_port: number
   console_level?: number | null
 }
+
+export type WebSocketMessage = {
+  type: string;
+  data: any;
+}
+
+export type AgentDetails = {
+  jobNumber: string;
+  // Add other agent-specific fields as needed
+}

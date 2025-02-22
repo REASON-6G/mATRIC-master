@@ -10,7 +10,6 @@ import type {
   Message,
   NewPassword,
   Token,
-  UserPublic,
   UserCreate,
   UserRegister,
   UsersPublic,
@@ -19,7 +18,8 @@ import type {
   ItemCreate,
   ItemPublic,
   ItemsPublic,
-  ItemUpdate, TokenData,
+  ItemUpdate,
+  TokenData, WebSocketMessage
 } from "./models"
 
 export type TDataLoginAccessToken = {
@@ -61,10 +61,10 @@ export class LoginService {
   /**
    * Test Token
    * Test access token
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
-  public static testToken(): CancelablePromise<UserPublic> {
+  public static testToken(): CancelablePromise<TokenData> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/v1/login/test-token",
@@ -158,7 +158,7 @@ export type TDataReadUserById = {
 }
 export type TDataUpdateUser = {
   requestBody: UserUpdate
-  userId: number
+  id: number
 }
 export type TDataDeleteUser = {
   userId: number
@@ -191,12 +191,12 @@ export class UsersService {
   /**
    * Create User
    * Create new user.
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
   public static createUser(
     data: TDataCreateUser,
-  ): CancelablePromise<UserPublic> {
+  ): CancelablePromise<TokenData> {
     const { requestBody } = data
     return __request(OpenAPI, {
       method: "POST",
@@ -212,7 +212,7 @@ export class UsersService {
   /**
    * Read User Me
    * Get current user.
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
   public static readUserMe(): CancelablePromise<TokenData> {
@@ -238,12 +238,12 @@ export class UsersService {
   /**
    * Update User Me
    * Update own user.
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
   public static updateUserMe(
     data: TDataUpdateUserMe,
-  ): CancelablePromise<UserPublic> {
+  ): CancelablePromise<TokenData> {
     const { requestBody } = data
     return __request(OpenAPI, {
       method: "PATCH",
@@ -280,12 +280,12 @@ export class UsersService {
   /**
    * Register User
    * Create new user without the need to be logged in.
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
   public static registerUser(
       data: TDataRegisterUser,
-  ): CancelablePromise<UserPublic> {
+  ): CancelablePromise<TokenData> {
     const { requestBody } = data
     return __request(OpenAPI, {
       method: "POST",
@@ -301,12 +301,12 @@ export class UsersService {
   /**
    * Read User By Id
    * Get a specific user by id.
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
   public static readUserById(
     data: TDataReadUserById,
-  ): CancelablePromise<UserPublic> {
+  ): CancelablePromise<TokenData> {
     const { userId } = data
     return __request(OpenAPI, {
       method: "GET",
@@ -323,18 +323,18 @@ export class UsersService {
   /**
    * Update User
    * Update a user.
-   * @returns UserPublic Successful Response
+   * @returns TokenData Successful Response
    * @throws ApiError
    */
   public static updateUser(
     data: TDataUpdateUser,
-  ): CancelablePromise<UserPublic> {
-    const { requestBody, userId } = data
+  ): CancelablePromise<UserUpdate> {
+    const { requestBody } = data
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/api/v1/users/{user_id}",
       path: {
-        user_id: userId,
+        user_id: data.id,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -619,7 +619,7 @@ export class AgentsService {
         query: {
           id,
         },
-        body: { requestBody },
+        body: requestBody,
         mediaType: "application/json",
         errors: {
           422: `Validation Error`,
@@ -664,4 +664,72 @@ export class AgentsService {
         },
       })
     }
+}
+
+export class WebSocketService {
+  private socket: WebSocket | null = null;
+  private messageCallbacks: ((message: WebSocketMessage) => void)[] = [];
+
+  constructor(private baseUrl: string = 'ws://127.0.0.1:8000') {}
+
+  connect(jobNumber: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        this.socket = new WebSocket(`${this.baseUrl}/ws/${jobNumber}`);
+
+        this.socket.onopen = () => {
+          console.log('WebSocket connection established');
+          resolve();
+        };
+
+        this.socket.onmessage = (event) => {
+          try {
+            const message: WebSocketMessage = JSON.parse(event.data);
+            this.messageCallbacks.forEach(callback => callback(message));
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+          }
+        };
+
+        this.socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          reject(error);
+        };
+
+        this.socket.onclose = () => {
+          console.log('WebSocket connection closed');
+          this.socket = null;
+        };
+
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+  }
+
+  onMessage(callback: (message: WebSocketMessage) => void): void {
+    this.messageCallbacks.push(callback);
+  }
+
+  removeMessageCallback(callback: (message: WebSocketMessage) => void): void {
+    this.messageCallbacks = this.messageCallbacks.filter(cb => cb !== callback);
+  }
+
+  sendMessage(message: WebSocketMessage): void {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket is not connected');
+    }
+    this.socket.send(JSON.stringify(message));
+  }
+
+  isConnected(): boolean {
+    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+  }
 }
