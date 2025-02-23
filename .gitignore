@@ -8,3 +8,4 @@ frontend/.env
 .idea
 .idea/misc.xml
 .idea/matric-joiner-master.iml
+.DS_Store
