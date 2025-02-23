@@ -18,7 +18,7 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 import {
   type ApiError,
   type TokenData,
-  type UserUpdate,
+  // type UserUpdate,
   UsersService,
 } from "../../client"
 import useAuth from "../../hooks/useAuth"
@@ -43,6 +43,7 @@ const UserInformation = () => {
     defaultValues: {
       username: currentUser?.username,
       roles: currentUser?.roles,
+      id: currentUser?.id
     },
   })
 
