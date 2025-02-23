@@ -1,18 +1,17 @@
-# /wiremq/subscriber_agent_data_linux.py
-
 from dotenv import load_dotenv
-# Load environment variables from .env file
 load_dotenv()
 import logging
 import json
+import asyncio
+import websockets
 from app.rabbitmq.consumer import RabbitMQConsumer
-from app.utils.http_callback import send_callback
-from dotenv import load_dotenv
 from app.utils.influxdb_reader import InfluxDBReader
 from datetime import datetime
 
+
 # Constants
-CALLBACK_URL = "http://localhost:8000/callback/agent_data"
+WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{}"
+
 
 class SubscriberAgentData:
     def __init__(self):
@@ -22,6 +21,18 @@ class SubscriberAgentData:
         # Initialize RabbitMQ consumer and InfluxDB reader
         self.rabbitmq_consumer = RabbitMQConsumer(queue_name="agent_data")
         self.influxdb_reader = InfluxDBReader()
+
+    async def websocket_send(self, job_number, data):
+        """
+        Establish WebSocket connection and send data.
+        """
+        uri = WEBSOCKET_URL_TEMPLATE.format(job_number)
+        try:
+            async with websockets.connect(uri) as websocket:
+                await websocket.send(json.dumps(data))
+                self.logger.info(f"Data sent via WebSocket for job_number: {job_number}")
+        except Exception as e:
+            self.logger.error(f"WebSocket connection error: {str(e)}")
 
     def process_message(self, message):
         """
@@ -34,7 +45,6 @@ class SubscriberAgentData:
             start_time = task_details.get("start_time")
             end_time = task_details.get("end_time")
 
-            # Log task details
             self.logger.info(f"Processing task: {job_number} for agent_id: {agent_id}")
 
             # Query InfluxDB for agent data
@@ -49,17 +59,13 @@ class SubscriberAgentData:
                 }
 
             serialized_data = [serialize_data(record) for record in agent_data]
-
             logging.info(f"Serialized agent data: {serialized_data}")
 
-            # Send data back to FastAPI callback
-            send_callback(job_number, CALLBACK_URL, serialized_data)
+            # Send data via WebSocket
+            asyncio.run(self.websocket_send(job_number, serialized_data))
 
         except Exception as e:
             self.logger.error(f"Error processing message: {str(e)}")
-            # Send failure response to callback
-            task_data = json.loads(message)
-            send_callback(task_data.get("job_number"), CALLBACK_URL, [{"status": "failed", "error": str(e)}])
 
     def run(self):
         """

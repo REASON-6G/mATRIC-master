@@ -68,7 +68,8 @@ services:
       - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
-
+    ports:
+      - "8888:80"
     build:
       context: ./backend
       args:
@@ -140,6 +141,84 @@ services:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
     command: python app/rabbitmq/subscriber_agent_command.py
+    depends_on:
+      - db
+      - mq
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+
+  agent_data:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+    command: python app/rabbitmq/subscriber_agent_data.py
+    depends_on:
+      - db
+      - mq
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+
+  agent_details:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+    command: python app/rabbitmq/subscriber_agent_details.py
     depends_on:
       - db
       - mq

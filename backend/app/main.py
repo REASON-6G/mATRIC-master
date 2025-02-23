@@ -40,14 +40,14 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # Set CORS enabled origins if specified in settings
-if settings.backend_cors_origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[settings.backend_cors_origins],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# if settings.backend_cors_origins:
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include the routers from the routes folder
 app.include_router(token.router, prefix="/api/v1/token", tags=["token"])
