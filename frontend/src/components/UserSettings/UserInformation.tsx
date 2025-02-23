@@ -51,7 +51,7 @@ const UserInformation = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: UserUpdate) =>
+    mutationFn: (data: TokenData) =>
       UsersService.updateUser({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
@@ -67,7 +67,7 @@ const UserInformation = () => {
     },
   })
 
-  const onSubmit: SubmitHandler<UserUpdate> = async (data) => {
+  const onSubmit: SubmitHandler<TokenData> = async (data) => {
     mutation.mutate(data)
   }
 
