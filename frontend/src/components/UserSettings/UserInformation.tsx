@@ -52,10 +52,15 @@ const UserInformation = () => {
   }
 
   const mutation = useMutation({
+
     mutationFn: (data: TokenData) =>
-      UsersService.updateUser({ requestBody: data }),
+      UsersService.updateUser({
+        requestBody: data,
+        id: currentUser?.id || 0 // Add the user ID from currentUser
+      }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
+      toggleEditMode() // Close edit mode after successful update
     },
     onError: (err: ApiError) => {
       const errDetail = (err.body as any)?.detail
@@ -69,6 +74,11 @@ const UserInformation = () => {
   })
 
   const onSubmit: SubmitHandler<TokenData> = async (data) => {
+    // Add validation to check for user ID before submitting
+    if (!currentUser?.id) {
+      showToast("Error", "No valid user ID found", "error")
+      return
+  }
     mutation.mutate(data)
   }
 
