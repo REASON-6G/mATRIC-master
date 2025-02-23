@@ -20,7 +20,6 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 import {
   type ApiError,
   type TokenData,
-  type UserUpdate,
   UsersService,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
@@ -32,7 +31,7 @@ interface EditUserProps {
   onClose: () => void
 }
 
-interface UserUpdateForm extends UserUpdate {
+interface UserUpdateForm extends TokenData {
   confirm_password: string
 }
 
@@ -70,7 +69,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
 
   const onSubmit: SubmitHandler<UserUpdateForm> = async (data) => {
     if (data.password === "") {
-      data.password = undefined
+      data.password = ""
     }
     mutation.mutate(data)
   }

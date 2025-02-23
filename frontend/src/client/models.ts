@@ -74,6 +74,7 @@ export type Token = {
 export type TokenData = {
   id: number
   username?: string | null
+  password: string
   roles: string
   scopes?: Array<string>
 }

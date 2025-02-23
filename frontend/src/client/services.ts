@@ -13,7 +13,7 @@ import type {
   UserCreate,
   UserRegister,
   UsersPublic,
-  UserUpdate,
+  // UserUpdate,
   UserUpdateMe,
   ItemCreate,
   ItemPublic,
@@ -157,7 +157,7 @@ export type TDataReadUserById = {
   userId: number
 }
 export type TDataUpdateUser = {
-  requestBody: UserUpdate
+  requestBody: TokenData
   id: number
 }
 export type TDataDeleteUser = {
@@ -328,7 +328,7 @@ export class UsersService {
    */
   public static updateUser(
     data: TDataUpdateUser,
-  ): CancelablePromise<UserUpdate> {
+  ): CancelablePromise<TokenData> {
     const { requestBody } = data
     return __request(OpenAPI, {
       method: "PATCH",
@@ -670,7 +670,7 @@ export class WebSocketService {
   private socket: WebSocket | null = null;
   private messageCallbacks: ((message: WebSocketMessage) => void)[] = [];
 
-  constructor(private baseUrl: string = 'wss://nn-athena.matric.uk/api/v1/callback/agent_data/') {}
+  constructor(private baseUrl: string = 'https://nn-athena.matric.uk/api/v1/agent_data/request_agent_data?agent_id=LiFi') {}
 
   connect(jobNumber: string): Promise<void> {
     return new Promise((resolve, reject) => {
