@@ -1,4 +1,4 @@
-import type { WebSocketService, WebSocketMessage } from "../client"
+import { WebSocketService, WebSocketMessage } from "../client"
 
 // Timestamp formatter
 const getTimestamp = () => new Date().toISOString();
@@ -14,7 +14,7 @@ const logger = {
 
 async function connectToWebSocket() {
   logger.info('Initializing WebSocket service...');
-  let wsService: WebSocketService;
+  const wsService = new WebSocketService();
 
   // Track connection attempts
   let connectionAttempts = 0;
