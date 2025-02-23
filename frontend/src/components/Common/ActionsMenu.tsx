@@ -56,7 +56,7 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           />
         ) : (
           <EditItem
-            item={value as Agent}
+            agent={value as Agent}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
