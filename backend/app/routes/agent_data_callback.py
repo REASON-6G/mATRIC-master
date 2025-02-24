@@ -20,7 +20,7 @@ async def websocket_endpoint(websocket: WebSocket, job_number: str):
     WebSocket endpoint for third-party apps to connect.
     Each connection is identified by a unique job_number.
     """
-    await ws_manager.connect(websocket)
+    await ws_manager.connect(job_number, websocket)
     active_connections[job_number] = websocket
 
     try:
@@ -30,8 +30,7 @@ async def websocket_endpoint(websocket: WebSocket, job_number: str):
     except Exception as e:
         print(f"WebSocket connection closed for job_number {job_number}: {str(e)}")
     finally:
-        await ws_manager.disconnect(websocket)
-        active_connections.pop(job_number, None)
+        await ws_manager.disconnect(job_number)
 
 
 # HTTP callback endpoint to receive agent data from the subscriber
