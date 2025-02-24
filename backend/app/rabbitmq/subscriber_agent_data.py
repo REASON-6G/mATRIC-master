@@ -8,8 +8,10 @@ from app.rabbitmq.consumer import RabbitMQConsumer
 from app.utils.influxdb_reader import InfluxDBReader
 from datetime import datetime
 
-# WebSocket URL
+
+# Constants
 WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{}"
+
 
 class SubscriberAgentData:
     def __init__(self):

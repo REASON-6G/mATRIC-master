@@ -1,0 +1,70 @@
+---
+# Runner user - user under which is the local runner service running
+runner_user: "{{ lookup('env', 'USER') }}"
+
+# Directory where the local runner will be installed
+runner_dir: /opt/actions-runner
+
+# Version of the GitHub Actions Runner
+runner_version: "latest"
+
+# State in which the runner service will be after the role is done (started, stopped, absent)
+runner_state: "started"
+
+# If found on the server, delete already existing runner service and install it again
+reinstall_runner: false
+
+# Do not show Ansible logs which may contain sensitive data (registration token)
+hide_sensitive_logs: true
+
+# GitHub address
+github_url: "https://github.com"
+
+# GitHub API
+github_api_url: "https://api.github.com"
+
+# Number of runners to list per page
+github_api_runners_per_page: 100
+
+# Personal Access Token for your GitHub account
+access_token: "{{ lookup('env', 'PERSONAL_ACCESS_TOKEN') }}"
+
+# Is it the runner for organization or not?
+runner_org: false
+
+# Labels to apply to the runner
+runner_labels: []
+
+# Group to add organization runner to
+runner_group: ""
+
+# GitHub Actions Runner repository (change it if you want to use custom Actions Runner fork)
+runner_download_repository: "actions/runner"
+
+# Extra arguments to pass to `config.sh`.
+# Several arguments muste be set as one string (i.e. "--ephemeral --my_special_fork")
+runner_extra_config_args: ""
+
+# Name to assign to this runner in GitHub (System hostname as default)
+runner_name: "{{ ansible_facts.hostname }}"
+
+# GitHub Repository user or Organization owner used for Runner registration
+# github_account: "youruser"
+
+# GitHub repository owner name (if other than github_account)
+# github_owner: "yourorg"
+
+# Github repository name
+# github_repo: "yourrepo"
+
+# GitHub Enterprise name
+# github_enterprise: "yourenterprise"
+
+# Configuring a custom .env file
+# custom_env: |
+# http_proxy=YOUR_URL_HERE
+# ftp_proxy=YOUR_URL_HERE
+# HTTPS_PROXY=YOUR_URL_HERE
+# https_proxy=YOUR_URL_HERE
+# no_proxy=localhost,127.0.0.1,127.0.0.2
+# HTTP_PROXY=

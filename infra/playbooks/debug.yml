@@ -1,0 +1,12 @@
+---
+  - name: "Debug"
+    hosts: matrics
+    gather_facts: yes
+
+    tasks:
+      - name: Debug
+        debug:
+          var=hostvars[inventory_hostname]
+      - name: IP Address
+        debug:
+          msg: "{{ ansible_user }}@{{ ansible_host }} '{{ inventory_hostname }} {{ description }}'"

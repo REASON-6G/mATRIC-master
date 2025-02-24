@@ -46,7 +46,7 @@ export class LoginService {
     const { formData } = data
     return __request(OpenAPI, {
       method: "POST",
-      url: "/api/v1/login/access-token",
+      url: "/api/v1/token",
       formData: formData,
       mediaType: "application/x-www-form-urlencoded",
       errors: {
@@ -281,7 +281,7 @@ export class UsersService {
    * @throws ApiError
    */
   public static registerUser(
-    data: TDataRegisterUser,
+      data: TDataRegisterUser,
   ): CancelablePromise<UserPublic> {
     const { requestBody } = data
     return __request(OpenAPI, {

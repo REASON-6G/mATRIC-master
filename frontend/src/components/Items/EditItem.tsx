@@ -47,7 +47,7 @@ const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
     mutationFn: (data: ItemUpdate) =>
       ItemsService.updateItem({ id: item.id, requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Item updated successfully.", "success")
+      showToast("Success!", "Access point updated successfully.", "success")
       onClose()
     },
     onError: (err: ApiError) => {
@@ -101,6 +101,15 @@ const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
                 {...register("description")}
                 placeholder="Description"
                 type="text"
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel htmlFor="location">Location</FormLabel>
+              <Input
+                  id="location"
+                  {...register("data")}
+                  placeholder="Location"
+                  type="text"
               />
             </FormControl>
           </ModalBody>

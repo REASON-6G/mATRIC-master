@@ -1,54 +1,53 @@
 services:
+  influxdb:
+    image: influxdb:2
+    ports:
+      - "8086:8086"
+    volumes:
+      - app-influxdb-data:/var/lib/influxdb
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD?Variable not set}
+      - DOCKER_INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - DOCKER_INFLUXDB_INIT_ORG="University of Bristol"
+      - DOCKER_INFLUXDB_INIT_BUCKET=matric
+      - DOCKER_INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+
   db:
     image: postgres:12
     restart: always
     volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
+      - app-postgres-data:/var/lib/postgresql/data/pgdata
     env_file:
       - .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
-      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_DB=${POSTGRES_NAME?Variable not set}
 
   adminer:
     image: adminer
     restart: always
-    networks:
-      - traefik-public
-      - default
     depends_on:
       - db
     environment:
       - ADMINER_DESIGN=pepa-linha-dark
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.constraint-label=traefik-public
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.rule=Host(`adminer.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.rule=Host(`adminer.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls.certresolver=le
-      - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
 
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
-    networks:
-      - traefik-public
-      - default
     depends_on:
       - db
+      - mq
     env_file:
       - .env
     environment:
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
       - SECRET_KEY=${SECRET_KEY?Variable not set}
       - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
       - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
@@ -57,71 +56,34 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_SERVER=db
+      - POSTGRES_HOST=db
       - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
-
+    ports:
+      - "8888:80"
     build:
       context: ./backend
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
     platform: linux/amd64 # Patch for M1 Mac
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.constraint-label=traefik-public
-
-      - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=80
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=(Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`))
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.entrypoints=http
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.rule=(Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`))
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
-
-      # Define Traefik Middleware to handle domain with and without "www" to redirect to only one
-      - traefik.http.middlewares.${STACK_NAME?Variable not set}-www-redirect.redirectregex.regex=^http(s)?://www.(${DOMAIN?Variable not set})/(.*)
-      # Redirect a domain with www to non-www
-      - traefik.http.middlewares.${STACK_NAME?Variable not set}-www-redirect.redirectregex.replacement=http$${1}://${DOMAIN?Variable not set}/$${3}
-
-      # Enable www redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.middlewares=${STACK_NAME?Variable not set}-www-redirect
 
   frontend:
     image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
     restart: always
-    networks:
-      - traefik-public
-      - default
     build:
       context: ./frontend
       args:
         - VITE_API_URL=https://${DOMAIN?Variable not set}
         - NODE_ENV=production
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik-public
-      - traefik.constraint-label=traefik-public
-
-      - traefik.http.services.${STACK_NAME?Variable not set}-frontend.loadbalancer.server.port=80
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.entrypoints=http
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.rule=Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls.certresolver=le
-
-      # Enable www redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.middlewares=${STACK_NAME?Variable not set}-www-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
 
   mq:
     image: rabbitmq:3-management
@@ -131,10 +93,167 @@ services:
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
-volumes:
-  app-db-data:
+      - RABBITMQ_HEARTBEAT=0
 
-networks:
-  traefik-public:
-    # Allow setting it to false for testing
-    external: true
+  agent:
+     
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+  
+    command: python app/rabbitmq/subscriber_agent_update.py
+    
+    depends_on:
+      - db
+      - mq
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+
+  agent_command:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+    command: python app/rabbitmq/subscriber_agent_command.py
+    depends_on:
+      - db
+      - mq
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+
+  agent_data:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+    command: python app/rabbitmq/subscriber_agent_data.py
+    depends_on:
+      - db
+      - mq
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+
+  agent_details:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+    command: python app/rabbitmq/subscriber_agent_details.py
+    depends_on:
+      - db
+      - mq
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
+      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
+      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+
+volumes:
+  app-postgres-data:
+  app-influxdb-data:

@@ -1,0 +1,6 @@
+---
+ansible_ssh_user: ubuntu
+access_token: "{{ vault_github_personal_access_token }}"
+labels:
+  - self-hosted
+  - production

@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{job_number}"
 
 
+
 class AgentDetailsSubscriber:
     def __init__(self):
         self.queue_name = "agent_details"  # Queue for agent details
