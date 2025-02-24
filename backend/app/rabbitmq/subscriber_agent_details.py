@@ -1,15 +1,23 @@
+# /rabbitmq/subscriber_agent_details.py
+
 from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
+
 import logging
+import json
+import asyncio
+import websockets
 from app.rabbitmq.consumer import RabbitMQConsumer
-from app.utils.http_callback import send_callback
 from app.database_session import SessionLocal
 from app.database import DatabaseManager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Constants
+WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_details/ws/{job_number}"
 
 
 class AgentDetailsSubscriber:
@@ -44,9 +52,24 @@ class AgentDetailsSubscriber:
         finally:
             db.close()
 
+    async def websocket_send(self, job_number, data):
+        """
+        Sends agent details to the WebSocket server.
+        """
+        websocket_url = WEBSOCKET_URL_TEMPLATE.format(job_number=job_number)
+        logger.info(f"Connecting to WebSocket URL: {websocket_url}")
+        try:
+            async with websockets.connect(websocket_url) as websocket:
+                message = json.dumps(data)
+                logger.info(f"Sending data to WebSocket: {message}")
+                await websocket.send(message)
+                logger.info(f"Data sent via WebSocket for job_number: {job_number}")
+        except Exception as e:
+            logger.error(f"WebSocket connection error: {e}")
+
     def process_message(self, message: dict):
         """
-        Process the incoming message to fetch and return agent details.
+        Process the incoming message to fetch and send agent details.
         """
         try:
             logger.info(f"Received message: {message}")
@@ -64,10 +87,8 @@ class AgentDetailsSubscriber:
             # Fetch agent details from the database
             agent_details = self.fetch_agent_details()
 
-            # Send the fetched details back through callback
-            callback_url = f"http://localhost:8000/callback/agent_details"
-            send_callback(job_number, callback_url, agent_details)
-            logger.info(f"Agent details sent to callback for job: {job_number}")
+            # Send the fetched details directly via WebSocket
+            asyncio.run(self.websocket_send(job_number, agent_details))
 
         except Exception as e:
             logger.error(f"Error processing message: {e}")
