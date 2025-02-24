@@ -76,6 +76,11 @@ class AgentDetailsSubscriber:
             logger.error(f"WebSocket connection closed with error: {e}")
         except Exception as e:
             logger.error(f"WebSocket connection error: {e}")
+        finally:
+            # Explicitly close the WebSocket with a normal closure code
+            if 'websocket' in locals() and websocket.open:
+                await websocket.close(code=1000)
+                logger.info("WebSocket connection closed successfully with code 1000")
 
     def process_message(self, message: dict):
         """
