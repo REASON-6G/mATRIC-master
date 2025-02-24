@@ -1,4 +1,4 @@
-# /routes/agent_details_callback.py
+ # /routes/agent_details_callback.py
 
 from fastapi import APIRouter, WebSocket, HTTPException, Body, Request
 from typing import Dict, List
@@ -30,10 +30,12 @@ async def websocket_endpoint(websocket: WebSocket, job_number: str):
             # Keep connection open and listen for data (if needed)
             await websocket.receive_text()
     except Exception as e:
-        print(f"WebSocket connection closed for job_number {job_number}: {str(e)}")
+        print(f"WebSocket error for job_number {job_number}: {str(e)}")
     finally:
+        # Ensure proper closure of the WebSocket connection
         await ws_manager.disconnect(job_number)
-        # active_connections.pop(job_number, None)
+        await websocket.close(code=1000)  # Normal closure
+        print(f"WebSocket closed for job_number {job_number}")
 
 
 # HTTP callback endpoint to receive agent details from the subscriber

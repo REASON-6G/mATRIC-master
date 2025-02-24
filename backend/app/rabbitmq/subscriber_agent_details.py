@@ -65,6 +65,10 @@ class AgentDetailsSubscriber:
                 await websocket.send(message)
                 # Wait for an acknowledgment (optional)
                 await websocket.recv()
+                # Properly close the WebSocket connection
+                await websocket.close(code=1000)
+                logger.info("WebSocket connection closed successfully")
+
                 logger.info(f"Data sent via WebSocket for job_number: {job_number}")
         except websockets.ConnectionClosedOK:
             logger.info("WebSocket connection closed normally.")
