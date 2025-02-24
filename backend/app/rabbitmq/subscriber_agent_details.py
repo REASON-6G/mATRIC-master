@@ -63,7 +63,13 @@ class AgentDetailsSubscriber:
                 message = json.dumps(data)
                 logger.info(f"Sending data to WebSocket: {message}")
                 await websocket.send(message)
+                # Wait for an acknowledgment (optional)
+                await websocket.recv()
                 logger.info(f"Data sent via WebSocket for job_number: {job_number}")
+        except websockets.ConnectionClosedOK:
+            logger.info("WebSocket connection closed normally.")
+        except websockets.ConnectionClosedError as e:
+            logger.error(f"WebSocket connection closed with error: {e}")
         except Exception as e:
             logger.error(f"WebSocket connection error: {e}")
 
