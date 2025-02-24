@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 # Constants
 # WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_details/ws/{job_number}"
 
-WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{}"
+WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{job_number}"
+
 
 
 class AgentDetailsSubscriber:
@@ -65,11 +66,11 @@ class AgentDetailsSubscriber:
                 message = json.dumps(data)
                 logger.info(f"Sending data to WebSocket: {message}")
                 await websocket.send(message)
-                # Wait for an acknowledgment (optional)
-                await websocket.recv()
-                # Properly close the WebSocket connection
-                await websocket.close(code=1000)
-                logger.info("WebSocket connection closed successfully")
+                # # Wait for an acknowledgment (optional)
+                # await websocket.recv()
+                # # Properly close the WebSocket connection
+                # await websocket.close(code=1000)
+                # logger.info("WebSocket connection closed successfully")
 
                 logger.info(f"Data sent via WebSocket for job_number: {job_number}")
         except websockets.ConnectionClosedOK:
@@ -78,11 +79,11 @@ class AgentDetailsSubscriber:
             logger.error(f"WebSocket connection closed with error: {e}")
         except Exception as e:
             logger.error(f"WebSocket connection error: {e}")
-        finally:
-            # Explicitly close the WebSocket with a normal closure code
-            if 'websocket' in locals() and websocket.open:
-                await websocket.close(code=1000)
-                logger.info("WebSocket connection closed successfully with code 1000")
+        # finally:
+        #     # Explicitly close the WebSocket with a normal closure code
+        #     if 'websocket' in locals() and websocket.open:
+        #         await websocket.close(code=1000)
+        #         logger.info("WebSocket connection closed successfully with code 1000")
 
     def process_message(self, message: dict):
         """
