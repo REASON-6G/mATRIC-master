@@ -17,7 +17,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants
-WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_details/ws/{job_number}"
+# WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_details/ws/{job_number}"
+
+WEBSOCKET_URL_TEMPLATE = "ws://backend/api/v1/callback/agent_data/ws/{}"
 
 
 class AgentDetailsSubscriber:
