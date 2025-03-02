@@ -1,6 +1,7 @@
 services:
   influxdb:
     image: influxdb:2
+    restart: always
     ports:
       - "8086:8086"
     volumes:
@@ -87,6 +88,7 @@ services:
 
   mq:
     image: rabbitmq:3-management
+    restart: always
     env_file:
       - .env
     environment:
@@ -96,12 +98,9 @@ services:
       - RABBITMQ_HEARTBEAT=0
 
   agent:
-     
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
-  
     command: python app/rabbitmq/subscriber_agent_update.py
-    
     depends_on:
       - db
       - mq
