@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React from "react"
 import { useForm } from "react-hook-form"
 
-import { ItemsService, UsersService } from "../../client"
+import { AgentsService, UsersService } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 
 interface DeleteProps {
@@ -31,8 +31,8 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   } = useForm()
 
   const deleteEntity = async (id: number) => {
-    if (type === "Item") {
-      await ItemsService.deleteItem({ id: id })
+    if (type === "Agent") {
+      await AgentsService.deleteAgent({ id: id })
     } else if (type === "User") {
       await UsersService.deleteUser({ userId: id })
     } else {
@@ -84,7 +84,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
             <AlertDialogBody>
               {type === "User" && (
                 <span>
-                  All items associated with this user will also be{" "}
+                  All agents associated with this user will also be{" "}
                   <strong>permantly deleted. </strong>
                 </span>
               )}

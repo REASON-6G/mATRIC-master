@@ -15,7 +15,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { type ApiError, type ItemCreate, ItemsService } from "../../client"
+import { type ApiError, type AgentCreate, AgentsService } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 
 interface AddItemProps {
@@ -31,19 +31,24 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ItemCreate>({
+  } = useForm<AgentCreate>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      title: "",
+      ap_id: "",
+      password: "",
+      configuration: {
+      location: "",
       description: "",
-      data: "",
+      },
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ItemCreate) =>
-      ItemsService.createItem({ requestBody: data }),
+    mutationFn: (data: AgentCreate) =>
+      AgentsService.createAgent({
+      requestBody: data
+    }),
     onSuccess: () => {
       showToast("Success!", "Access point created successfully.", "success")
       reset()
@@ -58,7 +63,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
     },
   })
 
-  const onSubmit: SubmitHandler<ItemCreate> = (data) => {
+  const onSubmit: SubmitHandler<AgentCreate> = (data) => {
     mutation.mutate(data)
   }
 
@@ -75,25 +80,25 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
           <ModalHeader>Add Access Point</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isRequired isInvalid={!!errors.title}>
+            <FormControl isRequired isInvalid={!!errors.ap_id}>
               <FormLabel htmlFor="title">Title</FormLabel>
               <Input
                 id="title"
-                {...register("title", {
-                  required: "Title is required.",
+                {...register("ap_id", {
+                  required: "Access Point ID is required.",
                 })}
                 placeholder="Title"
                 type="text"
               />
-              {errors.title && (
-                <FormErrorMessage>{errors.title.message}</FormErrorMessage>
+              {errors.ap_id && (
+                <FormErrorMessage>{errors.ap_id.message}</FormErrorMessage>
               )}
             </FormControl>
             <FormControl mt={4}>
               <FormLabel htmlFor="description">Description</FormLabel>
               <Input
                 id="description"
-                {...register("description")}
+                {...register("configuration.description")}
                 placeholder="Description"
                 type="text"
               />
@@ -102,7 +107,7 @@ const AddItem = ({ isOpen, onClose }: AddItemProps) => {
               <FormLabel htmlFor="location">Location</FormLabel>
               <Input
                 id="location"
-                {...register("data")}
+                {...register("configuration.location")}
                 placeholder="Location"
                 type="text"
               />

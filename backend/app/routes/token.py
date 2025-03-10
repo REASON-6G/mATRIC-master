@@ -17,7 +17,6 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                 login_type: str = Query(..., description="Login type: user, agent or third_party_app")):
     db_manager = DatabaseManager(db)
 
-    login_type = request.query_params.get('login_type')
     if not login_type:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Login type is required")
 

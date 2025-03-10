@@ -19,20 +19,19 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   type ApiError,
-  type UserPublic,
-  type UserUpdate,
+  type TokenData,
   UsersService,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern } from "../../utils"
 
 interface EditUserProps {
-  user: UserPublic
+  user: TokenData
   isOpen: boolean
   onClose: () => void
 }
 
-interface UserUpdateForm extends UserUpdate {
+interface UserUpdateForm extends TokenData {
   confirm_password: string
 }
 
@@ -54,7 +53,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
 
   const mutation = useMutation({
     mutationFn: (data: UserUpdateForm) =>
-      UsersService.updateUser({ userId: user.id, requestBody: data }),
+      UsersService.updateUser({ id: user.id, requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
       onClose()
@@ -70,7 +69,7 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
 
   const onSubmit: SubmitHandler<UserUpdateForm> = async (data) => {
     if (data.password === "") {
-      data.password = undefined
+      data.password = ""
     }
     mutation.mutate(data)
   }
@@ -93,24 +92,24 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
           <ModalHeader>Edit User</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isInvalid={!!errors.email}>
-              <FormLabel htmlFor="email">Email</FormLabel>
+            <FormControl isInvalid={!!errors.roles}>
+              <FormLabel htmlFor="email">Role</FormLabel>
               <Input
                 id="email"
-                {...register("email", {
-                  required: "Email is required",
+                {...register("roles", {
+                  required: "Role is required",
                   pattern: emailPattern,
                 })}
                 placeholder="Email"
                 type="email"
               />
-              {errors.email && (
-                <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+              {errors.roles && (
+                <FormErrorMessage>{errors.roles.message}</FormErrorMessage>
               )}
             </FormControl>
             <FormControl mt={4}>
               <FormLabel htmlFor="name">Full name</FormLabel>
-              <Input id="name" {...register("full_name")} type="text" />
+              <Input id="name" {...register("username")} type="text" />
             </FormControl>
             <FormControl mt={4} isInvalid={!!errors.password}>
               <FormLabel htmlFor="password">Set Password</FormLabel>
@@ -149,13 +148,8 @@ const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
             </FormControl>
             <Flex>
               <FormControl mt={4}>
-                <Checkbox {...register("is_superuser")} colorScheme="teal">
+                <Checkbox {...register("roles")} colorScheme="teal">
                   Is superuser?
-                </Checkbox>
-              </FormControl>
-              <FormControl mt={4}>
-                <Checkbox {...register("is_active")} colorScheme="teal">
-                  Is active?
                 </Checkbox>
               </FormControl>
             </Flex>

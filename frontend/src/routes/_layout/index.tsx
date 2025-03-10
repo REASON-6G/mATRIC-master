@@ -19,7 +19,7 @@ function Dashboard() {
       <Container maxW="full">
         <Box pt={6} m={4}>
           <Text fontSize="2l">
-            Hi, {currentUser?.full_name || currentUser?.email} 👋🏼
+            Hi, {currentUser?.username} 👋🏼
           </Text>
         </Box>
         <Box pt={6} m={4}>

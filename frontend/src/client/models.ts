@@ -1,6 +1,25 @@
 
+export type Agent = {
+  id: number
+  ap_id: string
+  configuration: Record<string, unknown>
+}
+
+export type AgentCreate = {
+  ap_id: string
+  password: string
+  configuration: Record<string, unknown>
+}
+
+export type AgentUpdate = {
+  id: number
+  ap_id: string | number
+  password?: string | null
+  configuration?: Record<string, unknown> | null
+}
+
 export type Body_login_login_access_token = {
-  grant_type?: string | null
+  login_type?: string | null
   username: string
   password: string
   scope?: string
@@ -52,9 +71,12 @@ export type Token = {
   token_type?: string
 }
 
-export type UpdatePassword = {
-  current_password: string
-  new_password: string
+export type TokenData = {
+  id: number
+  username?: string | null
+  password: string
+  roles: string
+  scopes?: Array<string>
 }
 
 export type UserCreate = {
@@ -80,20 +102,19 @@ export type UserRegister = {
 }
 
 export type UserUpdate = {
-  email?: string | null
-  is_active?: boolean
-  is_superuser?: boolean
-  full_name?: string | null
+  username?: string | null
   password?: string | null
+  roles?: Array<string> | null
 }
 
 export type UserUpdateMe = {
-  full_name?: string | null
-  email?: string | null
+  username?: string | null
+  password?: string | null
+  roles?: Array<string> | null
 }
 
 export type UsersPublic = {
-  data: Array<UserPublic>
+  data: Array<TokenData>
   count: number
 }
 
@@ -112,4 +133,14 @@ export type Channel = {
   dest_host: string
   dest_port: number
   console_level?: number | null
+}
+
+export type WebSocketMessage = {
+  type: string;
+  data: any;
+}
+
+export type AgentDetails = {
+  jobNumber: string;
+  // Add other agent-specific fields as needed
 }

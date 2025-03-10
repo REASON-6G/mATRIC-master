@@ -17,7 +17,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
 import { Suspense } from "react"
-import { type UserPublic, UsersService } from "../../client"
+import { type TokenData, UsersService } from "../../client"
 import ActionsMenu from "../../components/Common/ActionsMenu"
 import Navbar from "../../components/Common/Navbar"
 
@@ -27,37 +27,37 @@ export const Route = createFileRoute("/_layout/admin")({
 
 const MembersTableBody = () => {
   const queryClient = useQueryClient()
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const currentUser = queryClient.getQueryData<TokenData>(["currentUser"])
 
   const { data: users } = useSuspenseQuery({
     queryKey: ["users"],
-    queryFn: () => UsersService.readUsers({}),
+    queryFn: () => UsersService.readUsers(),
   })
 
   return (
     <Tbody>
       {users.data.map((user) => (
         <Tr key={user.id}>
-          <Td color={!user.full_name ? "ui.dim" : "inherit"}>
-            {user.full_name || "N/A"}
+          <Td color={!user.username? "ui.dim" : "inherit"}>
+            {user.username || "N/A"}
             {currentUser?.id === user.id && (
               <Badge ml="1" colorScheme="teal">
                 You
               </Badge>
             )}
           </Td>
-          <Td>{user.email}</Td>
-          <Td>{user.is_superuser ? "Superuser" : "User"}</Td>
+          <Td>{user.username}</Td>
+          <Td>{user.roles ? "Superuser" : "User"}</Td>
           <Td>
             <Flex gap={2}>
               <Box
                 w="2"
                 h="2"
                 borderRadius="50%"
-                bg={user.is_active ? "ui.success" : "ui.danger"}
+                bg={user.scopes ? "ui.success" : "ui.danger"}
                 alignSelf="center"
               />
-              {user.is_active ? "Active" : "Inactive"}
+              {user.scopes ? "Active" : "Inactive"}
             </Flex>
           </Td>
           <Td>

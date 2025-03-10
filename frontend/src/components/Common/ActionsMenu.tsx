@@ -9,14 +9,14 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
-import type { ItemPublic, UserPublic } from "../../client"
+import type { Agent, TokenData } from "../../client"
 import EditUser from "../Admin/EditUser"
 import EditItem from "../Items/EditItem"
 import Delete from "./DeleteAlert"
 
 interface ActionsMenuProps {
   type: string
-  value: ItemPublic | UserPublic
+  value: Agent | TokenData
   disabled?: boolean
 }
 
@@ -50,13 +50,13 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         </MenuList>
         {type === "User" ? (
           <EditUser
-            user={value as UserPublic}
+            user={value as TokenData}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
         ) : (
           <EditItem
-            item={value as ItemPublic}
+            agent={value as Agent}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />

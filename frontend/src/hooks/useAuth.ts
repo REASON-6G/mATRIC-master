@@ -1,4 +1,4 @@
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
@@ -7,8 +7,8 @@ import {
   type Body_login_login_access_token as AccessToken,
   type ApiError,
   LoginService,
-  type UserPublic,
   UsersService,
+  type TokenData,
   type UserRegister,
 } from "../client"
 import useCustomToast from "./useCustomToast.ts";
@@ -22,9 +22,10 @@ const useAuth = () => {
   const navigate = useNavigate()
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
-  const { data: user, isLoading } = useQuery<UserPublic | null, Error>({
+  const { data: user, isLoading } = useQuery<TokenData | null, Error>({
+
     queryKey: ["currentUser"],
-    queryFn: UsersService.readUserMe,
+    queryFn: () => UsersService.readUserMe(),
     enabled: isLoggedIn(),
   })
 
@@ -57,6 +58,7 @@ const useAuth = () => {
   const login = async (data: AccessToken) => {
     const response = await LoginService.loginAccessToken({
       formData: data,
+      loginType: "user",
     })
     localStorage.setItem("access_token", response.access_token)
   }

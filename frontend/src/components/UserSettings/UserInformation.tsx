@@ -17,8 +17,8 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   type ApiError,
-  type UserPublic,
-  type UserUpdateMe,
+  type TokenData,
+  // type UserUpdate,
   UsersService,
 } from "../../client"
 import useAuth from "../../hooks/useAuth"
@@ -37,12 +37,13 @@ const UserInformation = () => {
     reset,
     getValues,
     formState: { isSubmitting, errors, isDirty },
-  } = useForm<UserPublic>({
+  } = useForm<TokenData>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      full_name: currentUser?.full_name,
-      email: currentUser?.email,
+      username: currentUser?.username,
+      roles: currentUser?.roles,
+      id: currentUser?.id
     },
   })
 
@@ -51,10 +52,15 @@ const UserInformation = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: UserUpdateMe) =>
-      UsersService.updateUserMe({ requestBody: data }),
+
+    mutationFn: (data: TokenData) =>
+      UsersService.updateUser({
+        requestBody: data,
+        id: currentUser?.id || 0 // Add the user ID from currentUser
+      }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
+      toggleEditMode() // Close edit mode after successful update
     },
     onError: (err: ApiError) => {
       const errDetail = (err.body as any)?.detail
@@ -67,7 +73,12 @@ const UserInformation = () => {
     },
   })
 
-  const onSubmit: SubmitHandler<UserUpdateMe> = async (data) => {
+  const onSubmit: SubmitHandler<TokenData> = async (data) => {
+    // Add validation to check for user ID before submitting
+    if (!currentUser?.id) {
+      showToast("Error", "No valid user ID found", "error")
+      return
+  }
     mutation.mutate(data)
   }
 
@@ -94,7 +105,7 @@ const UserInformation = () => {
             {editMode ? (
               <Input
                 id="name"
-                {...register("full_name", { maxLength: 30 })}
+                {...register("username", { maxLength: 30 })}
                 type="text"
                 size="md"
               />
@@ -102,20 +113,20 @@ const UserInformation = () => {
               <Text
                 size="md"
                 py={2}
-                color={!currentUser?.full_name ? "ui.dim" : "inherit"}
+                color={!currentUser?.username ? "ui.dim" : "inherit"}
               >
-                {currentUser?.full_name || "N/A"}
+                {currentUser?.username || "N/A"}
               </Text>
             )}
           </FormControl>
-          <FormControl mt={4} isInvalid={!!errors.email}>
+          <FormControl mt={4} isInvalid={!!errors.username}>
             <FormLabel color={color} htmlFor="email">
               Email
             </FormLabel>
             {editMode ? (
               <Input
                 id="email"
-                {...register("email", {
+                {...register("username", {
                   required: "Email is required",
                   pattern: emailPattern,
                 })}
@@ -124,11 +135,11 @@ const UserInformation = () => {
               />
             ) : (
               <Text size="md" py={2}>
-                {currentUser?.email}
+                {currentUser?.roles}
               </Text>
             )}
-            {errors.email && (
-              <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+            {errors.username && (
+              <FormErrorMessage>{errors.username.message}</FormErrorMessage>
             )}
           </FormControl>
           <Flex mt={4} gap={3}>
@@ -137,7 +148,7 @@ const UserInformation = () => {
               onClick={toggleEditMode}
               type={editMode ? "button" : "submit"}
               isLoading={editMode ? isSubmitting : false}
-              isDisabled={editMode ? !isDirty || !getValues("email") : false}
+              isDisabled={editMode ? !isDirty || !getValues("username") : false}
             >
               {editMode ? "Save" : "Edit"}
             </Button>
