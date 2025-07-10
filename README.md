@@ -158,4 +158,4 @@ This includes using Docker Compose, custom local domains, `.env` configurations,
 
 ## License
 
-Licensed under the terms of the MIT license.
+Licensed under the terms of the BSD 3-Clause License
