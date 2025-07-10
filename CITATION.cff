@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software for research, please cite it as below."
+title: "mATRIC: Multi-Access Technology Intelligent Controller"
+authors:
+    affiliation: Smart Internet Lab, University of Bristol
+date-released: 2025-07-10
+version: "1.0.0"
+repository-code: https://github.com/REASON-6G/mATRIC-master
+license: BSD-3-Clause
