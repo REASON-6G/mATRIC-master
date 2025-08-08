@@ -108,4 +108,4 @@ services:
 
 networks:
   traefik-public:
-    external: false
+    external: true

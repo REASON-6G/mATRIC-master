@@ -4,11 +4,12 @@ services:
     ports:
       - 80:80
       - 443:443
+      - 8081:8080
     restart: always
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
-      - traefik.http.middlewares.https-redirect.contenttype.autodetect=false
+      - traefik.http.middlewares.https-redirect.contenttype
     command:
       - --providers.docker
       - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
@@ -111,4 +112,4 @@ services:
 
 networks:
   traefik-public:
-    external: false
+    external: true

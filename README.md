@@ -61,6 +61,23 @@ This repository host the mATRIC software implementation platform, an intelligent
 
 [![API docs](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
 
+## Quick start
+
+```bash
+git clone git@github.com:REASON-6G/mATRIC-master.git
+cd mATRIC-master
+```
+
+Then, edit SECRET_KEY, FIRST_SUPERUSER, FIRST_SUPERUSER_PASSWORD in .env
+
+```bash
+docker network create traefik-public
+docker compose up -d
+docker ps
+```
+
+In a browser, navigate to localhost
+
 ## How To Use It
 
 You can clone this repository as is.
