@@ -68,15 +68,33 @@ git clone git@github.com:REASON-6G/mATRIC-master.git
 cd mATRIC-master
 ```
 
-Then, edit SECRET_KEY, FIRST_SUPERUSER, FIRST_SUPERUSER_PASSWORD in .env
-
 ```bash
 docker network create traefik-public
 docker compose up -d
 docker ps
 ```
 
-In a browser, navigate to localhost
+You then may need to restart the backend container, as it sometimes does not connect to the RabbitMQ container. If RabbitMQ is not ready before the backend launches then backend will simply crash and not restart by itself.
+
+```bash
+docker restart matric-master-backend-1
+```
+
+You then need to create the first superuser, you can do this with cURL, Postman, or your favourite HTTP client
+
+```bash
+curl --location 'http://localhost/api/v1/users/public' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "username": "test@example.com",
+    "password": "asdasd123",
+    "roles": ["admin"]
+}'
+```
+
+In a browser, navigate to localhost and log in using `test@example.com` / `asdasd123`
+
+You should now see the dashboard.
 
 ## How To Use It
 
