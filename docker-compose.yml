@@ -1,0 +1,118 @@
+services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.docker=true
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=${LE_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - traefik_letsencrypt:/letsencrypt
+    labels:
+      - traefik.enable=true
+
+  api:
+    build: ./services/api
+    env_file: .env
+    depends_on:
+      - mongo
+      - rabbitmq
+      - influxdb
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`${API_HOST}`)
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.services.api.loadbalancer.server.port=8000
+
+  matcher:
+    build: ./services/matcher
+    env_file: .env
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  frontend:
+    build: ./services/frontend
+    env_file: .env
+    depends_on:
+      - api
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST}`)
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+      - traefik.http.services.frontend.loadbalancer.server.port=3000
+
+  emulators:
+    build: ./services/emulators
+    env_file: .env
+    depends_on:
+      - api
+    deploy:
+    replicas: 0
+
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITIAL_DB}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADMIN_PASS}
+    volumes:
+      - mongo_data:/data/db
+      - ./ops/mongo-init:/docker-entrypoint-initdb.d:ro
+    labels:
+      - traefik.enable=false
+  
+  mongo-express:
+    image: mongo-express:1.0.2
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_SERVER=mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ADMIN_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ADMIN_PASS}
+    ports:
+      - "8081:8081"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  influxdb:
+    image: influxdb:2.7
+    env_file: 
+      - .env
+    environment:
+      DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USER}
+      DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_PASS}
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - ./ops/influx/setup.sh:/docker-entrypoint-initdb.d/setup.sh:ro
+
+volumes:
+  mongo_data:
+  rabbitmq_data:
+  influxdb_data:
+  traefik_letsencrypt:
