@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from . import mongo
+from matching_service_api.utils import mongo_client
 import fnmatch
 
-bp = Blueprint("match", __name__)
+match_bp = Blueprint("match", __name__)
 
 def topic_matches(filter_pattern: str, topic: str) -> bool:
     """
@@ -13,7 +13,7 @@ def topic_matches(filter_pattern: str, topic: str) -> bool:
     """
     return fnmatch.fnmatchcase(topic, filter_pattern)
 
-@bp.route("/test", methods=["POST"])
+@match_bp.route("/test", methods=["POST"])
 @jwt_required()
 def test_match():
     """
@@ -25,7 +25,7 @@ def test_match():
     if not topic:
         return jsonify({"msg": "topic required"}), 400
 
-    subs_cursor = mongo.db.subscriptions.find({"active": True})
+    subs_cursor = mongo_client.db.subscriptions.find({"active": True})
     matches = []
     for sub in subs_cursor:
         if topic_matches(sub["topic_filter"], topic):

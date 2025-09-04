@@ -4,9 +4,9 @@ import json
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 
-from app.config import Config
+from matching_service_api.config import Config
 
-bp = Blueprint("rabbitmq", __name__)
+rabbit_bp = Blueprint("queues", __name__)
 
 RABBIT_URL = Config.RABBITMQ_URL
 EXCHANGE = Config.RABBITMQ_EXCHANGE
@@ -19,7 +19,7 @@ def get_channel():
     channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
     return connection, channel
 
-@bp.route("/publish", methods=["POST"])
+@rabbit_bp.route("/publish", methods=["POST"])
 @jwt_required()
 def publish():
     body = request.get_json() or {}
@@ -43,7 +43,7 @@ def publish():
     finally:
         connection.close()
 
-@bp.route("/subscribe", methods=["POST"])
+@rabbit_bp.route("/subscribe", methods=["POST"])
 @jwt_required()
 def subscribe():
     """
@@ -68,7 +68,7 @@ def subscribe():
     finally:
         connection.close()
 
-@bp.route("/poll", methods=["POST"])
+@rabbit_bp.route("/poll", methods=["POST"])
 @jwt_required()
 def poll():
     """

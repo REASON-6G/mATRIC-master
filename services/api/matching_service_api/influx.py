@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from influxdb_client import InfluxDBClient
 
-from app.config import Config
+from matching_service_api.config import Config
 
 influx_bp = Blueprint("influx", __name__, url_prefix="/influx")
 

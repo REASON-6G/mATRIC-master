@@ -1,20 +1,16 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_pymongo import PyMongo
-from flask_jwt_extended import JWTManager
-from app.config import Config
-from .routes.users import bp as users_bp
-from .routes.topics import bp as topics_bp
-from .routes.subscriptions import bp as subs_bp
-from .routes.publishers import bp as pubs_bp
-from .routes.metrics import bp as metrics_bp
-from .routes.admin import bp as admin_bp
-from app.rabbit import bp as rabbit_bp
-from app.match import bp as match_bp
-from app.auth import bp as auth_bp
-
-mongo = PyMongo()
-jwt = JWTManager()
+from matching_service_api.config import Config
+from matching_service_api.routes.users import users_bp
+from matching_service_api.routes.topics import topics_bp
+from matching_service_api.routes.subscriptions import subs_bp
+from matching_service_api.routes.publishers import pubs_bp
+from matching_service_api.routes.metrics import metrics_bp
+from matching_service_api.routes.admin import admin_bp
+from matching_service_api.rabbit import rabbit_bp
+from matching_service_api.match import match_bp
+from matching_service_api.auth import auth_bp
+from matching_service_api.utils import jwt_client, mongo_client
 
 
 def create_app():
@@ -24,8 +20,8 @@ def create_app():
 
 
     # init extensions
-    jwt.init_app(app)
-    mongo.init_app(app)
+    jwt_client.init_app(app)
+    mongo_client.init_app(app)
 
 
     # blueprints
