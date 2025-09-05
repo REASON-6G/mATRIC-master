@@ -7,9 +7,9 @@ from matching_service_api.routes.subscriptions import subs_bp
 from matching_service_api.routes.publishers import pubs_bp
 from matching_service_api.routes.metrics import metrics_bp
 from matching_service_api.routes.admin import admin_bp
-from matching_service_api.rabbit import rabbit_bp
-from matching_service_api.match import match_bp
-from matching_service_api.auth import auth_bp
+from matching_service_api.routes.rabbit import rabbit_bp
+from matching_service_api.routes.match import match_bp
+from matching_service_api.routes.auth import auth_bp
 from matching_service_api.utils import jwt_client, mongo_client
 
 
