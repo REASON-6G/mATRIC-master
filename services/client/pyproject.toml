@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "matching_service_client"
+version = "0.0.1"
+description = "Client API for the mATRIC matching service"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [
+    { include = "matching_service_client" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4"
+requests = "^2.28"
+pydantic = "^2.3"
+httpx = ">=0.28.1,<0.29.0"
+
+[tool.poetry.dev-dependencies]
+ipython = "*"
+black = "*"
+ruff = "*"
+
+[tool.ruff]
+line-length = 100
