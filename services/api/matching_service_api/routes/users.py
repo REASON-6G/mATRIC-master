@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from bson import ObjectId
+from werkzeug.security import generate_password_hash
 from pydantic import ValidationError
 
 from matching_service_api.utils import handle_exception, mongo_client
@@ -63,27 +64,43 @@ def get_user(user_id):
 @users_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_user():
-    """Create a new user (admin only)"""
+    """
+    Create a new user or agent.
+    - Only admins can create users or admins.
+    - Any authenticated user can create agents.
+    """
     try:
-        if not is_admin():
-            return jsonify({"error": "Admin privilege required"}), 403
-
         data = request.get_json() or {}
-        role = data.get("role", "user").lower()
-        if role not in {"user", "agent", "admin"}:
-            role = "user"
+        requested_role = data.get("role", "user").lower()
+        if requested_role not in {"user", "agent", "admin"}:
+            requested_role = "user"
 
+        current_user_is_admin = is_admin()
+        current_user_id = get_jwt_identity()
+
+        # Admin check for creating users/admins
+        if requested_role in {"user", "admin"} and not current_user_is_admin:
+            return jsonify({"error": "Admin privilege required to create users or admins"}), 403
+
+        # Any user can create agents
+        if requested_role == "agent":
+            # Optional: track which user created the agent
+            data["created_by"] = current_user_id
+
+        # Validate with Pydantic
         user_data = UserModel(
             username=data.get("username"),
             email=data.get("email"),
             full_name=data.get("full_name"),
-            role=role
+            role=requested_role
         )
 
+        # Validate password
         password = data.get("password")
         if not password or len(password) < 6:
             return jsonify({"error": "Password must be at least 6 characters"}), 400
 
+        # Check duplicate username
         if mongo_client.db.users.find_one({"username": user_data.username}):
             return jsonify({"error": "Username already exists"}), 409
 
@@ -92,6 +109,7 @@ def create_user():
 
         result = mongo_client.db.users.insert_one(user_dict)
         return jsonify({"id": str(result.inserted_id)}), 201
+
     except ValidationError as e:
         return jsonify({"errors": e.errors()}), 422
     except Exception as e:

@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{ include = "matcher" }]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 fnmatch2 = "^0.0.8"
 python-dotenv = "^1.0.0"
 loguru = "^0.7.0"

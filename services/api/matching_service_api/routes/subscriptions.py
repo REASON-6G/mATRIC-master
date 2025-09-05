@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
 from pydantic import ValidationError
+from pymongo.errors import DuplicateKeyError
+import logging
 
 from matching_service_api.utils import handle_exception, mongo_client
 from matching_service_api.models import SubscriptionModel
@@ -52,15 +54,21 @@ def create_subscription():
         data = request.get_json() or {}
 
         # Validate with Pydantic
-        sub_data = SubscriptionModel(**data)
-        sub_dict = sub_data.dict()
+        try:
+            sub_data = SubscriptionModel(**data)
+        except ValidationError as e:
+            return jsonify({"errors": e.errors()}), 422
+
+        sub_dict = sub_data.model_dump()
         sub_dict["user_id"] = user_id
 
-        result = mongo_client.db.subscriptions.insert_one(sub_dict)
-        return jsonify({"id": str(result.inserted_id)}), 201
+        try:
+            result = mongo_client.db.subscriptions.insert_one(sub_dict)
+            queue_name = sub_dict["queue"]
+            return jsonify(sub_dict), 201
+        except DuplicateKeyError:
+            return jsonify({"warning": "Subscription already exists"}), 409
 
-    except ValidationError as e:
-        return jsonify({"errors": e.errors()}), 422
     except Exception as e:
         return handle_exception(e, msg="Failed to create subscription", status_code=500)
 

@@ -1,10 +1,11 @@
 import json
 import pika
+from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from matching_service_api.config import Config
-from matching_service_api.utils import handle_exception
+from matching_service_api.utils import handle_exception, mongo_client
 
 rabbit_bp = Blueprint("queues", __name__)
 
@@ -53,8 +54,9 @@ def publish():
             exchange=EXCHANGE,
             routing_key=topic,
             body=json.dumps(payload),
-            properties=pika.BasicProperties(content_type="application/json")
+            properties=pika.BasicProperties(content_type="application/json", delivery_mode=2),
         )
+
         return jsonify({"status": "published", "topic": topic}), 200
     except Exception as e:
         return handle_exception(e, msg="Failed to publish message", status_code=503)
@@ -64,28 +66,53 @@ def publish():
 
 
 # -------------------
-# Subscribe (temporary queue)
+# Subscribe (durable queue)
 # -------------------
 @rabbit_bp.route("/subscribe", methods=["POST"])
 @jwt_required()
 def subscribe():
     """
-    Create a temporary queue and bind to a topic filter.
-    Returns queue name for consumption.
+    Create a durable queue and bind it to a topic filter.
+    Returns subscription ID + queue name for consumption.
     Expected JSON: { "filter": str }
     """
     try:
         body = request.get_json() or {}
+        user_id = get_jwt_identity()
         topic_filter = body.get("filter")
+
         if not topic_filter:
             return jsonify({"error": "filter required"}), 400
 
-        connection, channel = get_channel()
-        result = channel.queue_declare(queue="", exclusive=True)
-        queue_name = result.method.queue
-        channel.queue_bind(exchange=EXCHANGE, queue=queue_name, routing_key=topic_filter)
+        # Check if a subscription already exists
+        sub = mongo_client.db.subscriptions.find_one({"user_id": user_id, "topic_filter": topic_filter})
 
-        return jsonify({"queue": queue_name, "filter": topic_filter}), 200
+        if sub:
+            queue_name = sub["queue"]
+            subscription_id = str(sub["_id"])
+        else:
+            # Create a durable queue per subscription
+            connection, channel = get_channel()
+            # Generate a unique queue name using ObjectId
+            from bson import ObjectId
+            subscription_id = str(ObjectId())
+            queue_name = f"sub_{user_id}_{subscription_id}"
+            channel.queue_declare(queue=queue_name, durable=True)
+            channel.queue_bind(exchange=EXCHANGE, queue=queue_name, routing_key=topic_filter)
+
+            # Save subscription to MongoDB
+            mongo_client.db.subscriptions.insert_one({
+                "_id": ObjectId(subscription_id),
+                "user_id": user_id,
+                "topic_filter": topic_filter,
+                "queue": queue_name,
+                "active": True,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+            })
+
+        return jsonify({"subscription_id": subscription_id, "queue": queue_name, "filter": topic_filter}), 200
+
     except Exception as e:
         return handle_exception(e, msg="Failed to create subscription", status_code=503)
     finally:
@@ -109,10 +136,19 @@ def poll():
         if not queue:
             return jsonify({"error": "queue required"}), 400
 
+        # Validate queue exists in MongoDB subscriptions
+        sub = mongo_client.db.subscriptions.find_one({"queue": queue})
+        if not sub:
+            return jsonify({"error": f"Queue '{queue}' not registered in subscriptions"}), 404
+
         connection, channel = get_channel()
         method, props, msg_body = channel.basic_get(queue=queue, auto_ack=True)
         if method:
-            return jsonify({"message": json.loads(msg_body)}), 200
+            try:
+                payload = json.loads(msg_body)
+            except Exception:
+                payload = msg_body.decode("utf-8")
+            return jsonify({"message": payload}), 200
         else:
             return jsonify({"message": None}), 200
     except Exception as e:

@@ -1,7 +1,4 @@
 import asyncio
-from typing import Any, Dict, List, Optional
-import httpx
-
 from matching_service_client import MatchingServiceClient
 
 async def main():
@@ -9,28 +6,37 @@ async def main():
     await client.login("test", "asdasd123")
     print("Logged in")
 
-    # Create a metric
-    metric = await client.create_metric("uk/bristol/net/router1", 42.0, "dbm")
-    print("Metric created:", metric)
+    # Create a topic
+    topic = await client.create_topic("uk/bristol/net/router8", description="Router telemetry stream")
+    print("Topic created:", topic)
 
-    # List metrics
-    metrics = await client.list_metrics()
-    print("Metrics:", metrics)
+    # List topics
+    topics = await client.list_topics()
+    print("Topics:", topics)
 
-    # Test matching
-    matches = await client.test_match("uk/bristol/net/router1")
-    print("Matches:", matches)
+    # Publish a message
+    message = {"signal_strength": -42, "uptime": 12345}
+    result = await client.publish(topic="uk/bristol/net/router8", payload=message)
+    print("Message published:", result)
 
-    # Subscribe to a topic
-    queue_name = await client.subscribe_queue("uk/bristol/*")
-    print("Subscribed queue:", queue_name)
+    # Subscribe to a topic filter
+    subscription = await client.subscribe("uk/bristol/*")
+    print("Subscription created:", subscription)
 
-    # Poll messages
-    msg = await client.poll_queue(queue_name)
-    print("Polled message:", msg)
+    queue_name = subscription["queue"]
+
+    # Async callback for polled messages
+    async def print_callback(msg):
+        print("Received message:", msg)
+
+    # Start background polling
+    client.async_subscribe(queue_name, print_callback)
+
+    # Keep script running for demonstration
+    print("Polling messages for 5 seconds...")
+    await asyncio.sleep(5)
 
     await client.close()
-
 
 if __name__ == "__main__":
     asyncio.run(main())

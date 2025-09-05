@@ -49,34 +49,6 @@ def get_publisher(pub_id):
         return handle_exception(e)
 
 
-@pubs_bp.route("/", methods=["POST"])
-@jwt_required()
-def create_publisher():
-    """
-    Create a new publisher.
-    """
-    try:
-        data = request.get_json() or {}
-        if not data.get("name") or not data.get("location"):
-            return jsonify({"error": "Missing required fields: name, location"}), 400
-
-        # Validate with Pydantic
-        try:
-            publisher = PublisherModel(**data)
-        except ValidationError as e:
-            return jsonify({"errors": e.errors()}), 422
-
-        doc = publisher.dict()
-        doc["created_at"] = datetime.utcnow()
-
-        result = mongo_client.db.publishers.insert_one(doc)
-        return jsonify({"id": str(result.inserted_id)}), 201
-    except PyMongoError as e:
-        return handle_exception(e, msg="Database error")
-    except Exception as e:
-        return handle_exception(e)
-
-
 @pubs_bp.route("/<pub_id>", methods=["PUT"])
 @jwt_required()
 def update_publisher(pub_id):

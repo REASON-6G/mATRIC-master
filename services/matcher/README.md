@@ -29,26 +29,10 @@ The Matcher Service reads configuration from environment variables. Create a `.e
 ## Dependencies
 
 - Python 3.12+  
-- [Poetry](https://python-poetry.org/) for dependency management
+- [Poetry](https://python-poetry.org/) for dependency management, see top level README for installation instructions
 - `aio-pika` for async RabbitMQ connections
 - `pymongo` for MongoDB access
 - `python-dotenv` for `.env` support
-
-Install Poetry if you don’t have it:
-
-On Linux / macOS:
-
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-On Windows PowerShell:
-
-```powershell
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-```
-
-Ensure Poetry is in your system's PATH.
 
 ## Development Quick Start
 

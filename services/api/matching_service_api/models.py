@@ -38,6 +38,7 @@ class UserModel(BaseModel):
 class TopicModel(BaseModel):
     topic: str
     description: Optional[str] = None
+    publisher_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -61,10 +62,13 @@ class PublisherModel(BaseModel):
 
 
 class MetricModel(BaseModel):
-    topic: str  # changed from 'name' to 'topic' to match API
-    value: float
-    unit: Optional[str] = None
-    timestamp: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+    """Represents system-level metrics, stored in a single MongoDB document."""
+    connected_agents: int = 0
+    active_topics: int = 0
+    active_subscriptions: int = 0
+    messages_processed: int = 0
+    avg_latency_ms: float = 0.0
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # --- Match Models ---
 class MatchRequest(BaseModel):
@@ -88,10 +92,6 @@ class UserResponse(UserModel):
     id: str
 
 
-class TopicResponse(TopicModel):
-    id: str
-
-
 class SubscriptionResponse(SubscriptionModel):
     id: str
 
@@ -100,12 +100,9 @@ class PublisherResponse(PublisherModel):
     id: str
 
 
-class MetricResponse(BaseModel):
+class TopicResponse(TopicModel):
     id: str
-    topic: str
-    value: float
-    unit: Optional[str] = None
-    timestamp: datetime
+    publisher: Optional[PublisherResponse] = None
 
 
 # -------------------
@@ -116,5 +113,8 @@ try:
     mongo_client.db.users.create_index("username", unique=True)
     mongo_client.db.users.create_index("email", unique=True)
     mongo_client.db.publishers.create_index("name", unique=True)
+    mongo_client.db.subscriptions.create_index(
+        [("user_id", 1), ("topic_filter", 1), ("queue", 1)], unique=True
+    )
 except Exception:
     pass  # ignore if already exists

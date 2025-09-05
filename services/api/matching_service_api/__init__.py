@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from matching_service_api.config import Config
@@ -12,12 +13,13 @@ from matching_service_api.routes.match import match_bp
 from matching_service_api.routes.auth import auth_bp
 from matching_service_api.utils import jwt_client, mongo_client
 
+logging.basicConfig(level=logging.INFO)
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config())
+    app.logger.setLevel(logging.INFO)
     CORS(app, supports_credentials=True)
-
 
     # init extensions
     jwt_client.init_app(app)

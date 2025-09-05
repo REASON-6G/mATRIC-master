@@ -6,6 +6,7 @@ from datetime import datetime
 import aio_pika
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
+from bson import ObjectId
 
 from matcher.config import Config
 
@@ -22,7 +23,7 @@ POLL_INTERVAL = Config.POLL_INTERVAL
 # Logging
 # -------------------
 logging.basicConfig(
-    level=logging.INFO,  # Set to DEBUG for detailed workflow
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger("matcher")
@@ -38,28 +39,21 @@ db = mongo_client[DB_NAME]
 # -------------------
 def topic_matches(filter_pattern: str, topic: str) -> bool:
     match = fnmatch.fnmatchcase(topic, filter_pattern)
-    logger.debug(f"Matching topic '{topic}' against filter '{filter_pattern}' -> {match}")
+    logger.info(f"Matching topic '{topic}' against filter '{filter_pattern}' -> {match}")
     return match
-
-
-async def bind_queue(channel: aio_pika.Channel, queue_name: str, topic_filter: str):
-    """Bind a queue to the exchange with the given topic filter."""
-    try:
-        await channel.queue_bind(exchange=EXCHANGE, queue=queue_name, routing_key=topic_filter)
-        logger.debug(f"Queue {queue_name} successfully bound to filter {topic_filter}")
-    except Exception as e:
-        logger.error(f"Failed to bind queue {queue_name} to {topic_filter}: {e}")
 
 
 async def ensure_queues():
     """
-    Poll subscriptions and topics, ensuring each subscriber has a queue
-    bound for their topic filter. Skips subscriptions that already have a queue.
+    Reconcile DB subscriptions with RabbitMQ:
+    - Create durable queue for each active subscription
+    - Bind to all matching topics
+    - Drop queues for inactive subscriptions
     """
     try:
-        subscriptions = list(db.subscriptions.find({"active": True}))
+        subscriptions = list(db.subscriptions.find({}))
         topics = list(db.topics.find({}))
-        logger.debug(f"Fetched {len(subscriptions)} active subscriptions and {len(topics)} topics")
+        logger.info(f"Fetched {len(subscriptions)} subscriptions and {len(topics)} topics")
     except PyMongoError as e:
         logger.error(f"MongoDB error fetching subscriptions/topics: {e}")
         return
@@ -67,7 +61,7 @@ async def ensure_queues():
     try:
         connection = await aio_pika.connect_robust(RABBITMQ_URL)
         channel = await connection.channel()
-        await channel.declare_exchange(EXCHANGE, aio_pika.ExchangeType.TOPIC, durable=True)
+        exchange = await channel.declare_exchange(EXCHANGE, aio_pika.ExchangeType.TOPIC, durable=True)
     except Exception as e:
         logger.error(f"RabbitMQ connection error: {e}")
         return
@@ -76,38 +70,56 @@ async def ensure_queues():
         sub_id = str(sub["_id"])
         user_id = sub.get("user_id")
         topic_filter = sub.get("topic_filter")
-        queue_name = sub.get("queue")
+        active = sub.get("active", True)
+
+        queue_name = f"sub_{user_id}_{sub_id}"
 
         if not topic_filter:
             logger.warning(f"Subscription {sub_id} missing topic_filter, skipping")
             continue
 
-        if queue_name:
-            logger.debug(f"Skipping subscription {sub_id}, already has queue {queue_name}")
-            continue
-
-        logger.info(f"Processing subscription {sub_id} for user {user_id} with filter '{topic_filter}'")
-
-        # Check if any topic matches before creating a queue
-        matched_topics = [t["topic"] for t in topics if topic_matches(topic_filter, t["topic"])]
-        if not matched_topics:
-            logger.debug(f"No topics match filter '{topic_filter}' for subscription {sub_id}")
+        if not active:
+            # Clean up inactive subscription queues
+            try:
+                queue = await channel.declare_queue(queue_name, durable=True, passive=True)
+                await queue.delete()
+                logger.info(f"Deleted queue {queue_name} for inactive subscription {sub_id}")
+            except Exception:
+                logger.info(f"Queue {queue_name} already gone for inactive sub {sub_id}")
+            db.subscriptions.update_one(
+                {"_id": sub["_id"]},
+                {"$unset": {"queue": ""}, "$set": {"updated_at": datetime.utcnow()}}
+            )
             continue
 
         try:
-            result = await channel.declare_queue(exclusive=True)
-            queue_name = result.name
-            await bind_queue(channel, queue_name, topic_filter)
+            # Create or recover durable queue
+            queue = await channel.declare_queue(queue_name, durable=True)
+
+            # Always bind to exchange with subscription filter
+            await queue.bind(exchange, routing_key=topic_filter)
+
+            # Reconcile against all topics in DB
+            matched_topics = [t["topic"] for t in topics if topic_matches(topic_filter, t["topic"])]
+            for topic in matched_topics:
+                try:
+                    await queue.bind(exchange, routing_key=topic)
+                    logger.info(f"Bound queue {queue_name} to topic '{topic}' (sub {sub_id})")
+                except Exception as e:
+                    logger.error(f"Failed to bind queue {queue_name} to topic '{topic}': {e}")
+
+            # Update DB record with latest queue assignment
             db.subscriptions.update_one(
                 {"_id": sub["_id"]},
                 {"$set": {"queue": queue_name, "updated_at": datetime.utcnow()}}
             )
+
             logger.info(
-                f"Created queue {queue_name} for subscription {sub_id}, "
-                f"user {user_id}, filter '{topic_filter}', matched {len(matched_topics)} topics"
+                f"Ensured queue {queue_name} for sub {sub_id} "
+                f"(user {user_id}, filter '{topic_filter}', matched {len(matched_topics)} topics)"
             )
         except Exception as e:
-            logger.error(f"Error creating queue for subscription {sub_id}: {e}")
+            logger.error(f"Error ensuring queue {queue_name} for subscription {sub_id}: {e}")
 
     await connection.close()
 

@@ -34,23 +34,7 @@ The Flask API reads configuration from environment variables. Create a `.env` fi
 ## Dependencies
 
 - Python 3.11+  
-- [Poetry](https://python-poetry.org/) (preferred) for dependency management
-
-Install Poetry if you don’t have it:
-
-On Linux:
-
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-or from Windows
-
-```bash
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-```
-
-Ensure poetry is in your system's PATH.
+- [Poetry](https://python-poetry.org/) See top level README.md for installation instructions
 
 
 ## Development Quick Start
