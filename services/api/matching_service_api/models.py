@@ -1,3 +1,4 @@
+import secrets
 from pydantic import BaseModel, Field, constr, EmailStr
 from typing import Optional, Literal, List
 from datetime import datetime, timezone
@@ -53,6 +54,7 @@ class SubscriptionModel(BaseModel):
 
 class PublisherModel(BaseModel):
     name: str
+    api_token: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     description: Optional[str] = None
     organisation: Optional[str] = None
     location: Optional[dict] = Field(
@@ -69,6 +71,18 @@ class MetricModel(BaseModel):
     messages_processed: int = 0
     avg_latency_ms: float = 0.0
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class EmulatorModel(BaseModel):
+    owner_id: str
+    publisher_id: str
+    name: str
+    topic: str
+    msg_schema: dict
+    interval: float = 5.0
+    running: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
 
 # --- Match Models ---
 class MatchRequest(BaseModel):
@@ -116,5 +130,7 @@ try:
     mongo_client.db.subscriptions.create_index(
         [("user_id", 1), ("topic_filter", 1), ("queue", 1)], unique=True
     )
+    mongo_client.db.emulators.create_index([("owner_id", 1), ("name", 1)], unique=True)
+    mongo_client.db.emulators.create_index("topic")
 except Exception:
     pass  # ignore if already exists

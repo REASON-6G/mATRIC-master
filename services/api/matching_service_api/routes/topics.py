@@ -7,7 +7,7 @@ from datetime import datetime
 from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
 
-from matching_service_api.utils import handle_exception, mongo_client
+from matching_service_api.utils import handle_exception, mongo_client, role_required
 from matching_service_api.models import TopicModel, PublisherResponse
 
 topics_bp = Blueprint("topics", __name__)
@@ -67,6 +67,7 @@ def get_topic(topic_id):
 
 @topics_bp.route("/", methods=["POST"])
 @jwt_required()
+@role_required("user", "admin")
 def create_topic():
     """Create a new topic, optionally associate a publisher, and create a RabbitMQ queue"""
     try:
@@ -113,6 +114,7 @@ def create_topic():
 
 @topics_bp.route("/<topic_id>", methods=["PUT"])
 @jwt_required()
+@role_required("user", "admin")
 def update_topic(topic_id):
     """Update a topic (partial updates allowed), optionally assign/change publisher"""
     try:
@@ -160,6 +162,7 @@ def update_topic(topic_id):
 
 @topics_bp.route("/<topic_id>", methods=["DELETE"])
 @jwt_required()
+@role_required("user", "admin")
 def delete_topic(topic_id):
     """Delete a topic"""
     try:

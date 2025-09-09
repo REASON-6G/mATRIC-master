@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from typing import Optional, Callable, List, Awaitable, Union
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 import httpx
 from httpx import HTTPStatusError
@@ -55,12 +55,14 @@ class Subscription(BaseModel):
     updated_at: Optional[datetime]
 
 class Publisher(BaseModel):
-    id: str
     name: str
-    description: Optional[str]
-    organisation: Optional[str]
-    location: Optional[dict]
-    created_at: datetime
+    api_token: str
+    description: Optional[str] = None
+    organisation: Optional[str] = None
+    location: Optional[dict] = Field(
+        None, example={"type": "Point", "coordinates": [-2.58791, 51.4545]}
+    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Metric(BaseModel):
     id: str
@@ -78,6 +80,17 @@ class MatchResponse(BaseModel):
     topic: str
     matches: List[MatchResult]
 
+class Emulator(BaseModel):
+    owner_id: str
+    publisher_id: str
+    name: str
+    topic: str
+    msg_schema: dict
+    interval: float = 5.0
+    running: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
 
 # -------------------------------
 # API Client
@@ -88,17 +101,72 @@ class MatchingServiceClient:
         self.access_token: Optional[str] = None
         self.refresh_token: Optional[str] = None
         self.client = httpx.AsyncClient(timeout=10.0)
+        self._lock = asyncio.Lock()
+    
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        **kwargs
+    ) -> httpx.Response:
+        """
+        Perform an HTTP request with automatic token refresh on 401.
+        """
+        url = f"{self.base_url}{path}"
+        headers = kwargs.pop("headers", {})
+        if self.access_token:
+            headers["Authorization"] = f"Bearer {self.access_token}"
+
+        resp = await self.client.request(method, url, headers=headers, **kwargs)
+
+        # If unauthorized, attempt refresh
+        if resp.status_code == 401 and self.refresh_token:
+            async with self._lock:
+                # Double-check if another coroutine has refreshed
+                if headers.get("Authorization") != f"Bearer {self.access_token}":
+                    headers["Authorization"] = f"Bearer {self.access_token}"
+                    resp = await self.client.request(method, url, headers=headers, **kwargs)
+                else:
+                    await self.refresh()
+                    headers["Authorization"] = f"Bearer {self.access_token}"
+                    resp = await self.client.request(method, url, headers=headers, **kwargs)
+
+        await raise_for_status_with_logging(resp)
+        return resp
 
     # ---------------------------
     # Auth
     # ---------------------------
     async def login(self, username: str, password: str):
-        resp = await self.client.post(f"{self.base_url}/api/auth/login",
-                                      json={"username": username, "password": password})
-        await raise_for_status_with_logging(resp)
+        resp = await self._request("POST", "/api/auth/login", json={"username": username, "password": password})
         data = AuthResponse(**resp.json())
         self.access_token = data.access_token
         self.refresh_token = data.refresh_token
+
+    async def login_with_token(self, api_token: str):
+        """
+        Authenticates using a publisher API token.
+        Exchanges it for a short-lived JWT + refresh token.
+        """
+        resp = await self._request("POST", "/api/auth/validate", json={"api_token": api_token})
+        data = AuthResponse(**resp.json())
+        self.access_token = data.access_token
+        self.refresh_token = data.refresh_token
+        return data
+
+    async def refresh(self):
+        """
+        Refresh the access token using the refresh token.
+        """
+        if not self.refresh_token:
+            raise RuntimeError("No refresh token available")
+
+        resp = await self.client.post(
+            f"{self.base_url}/api/auth/refresh",
+            headers={"Authorization": f"Bearer {self.refresh_token}"}
+        )
+        await raise_for_status_with_logging(resp)
+        self.access_token = resp.json()["access_token"]
 
     def _headers(self):
         if not self.access_token:
@@ -106,34 +174,55 @@ class MatchingServiceClient:
         return {"Authorization": f"Bearer {self.access_token}"}
 
     # ---------------------------
+    # Public HTTP methods
+    # ---------------------------
+    async def get(self, path: str, **kwargs):
+        return await self._request("GET", path, **kwargs)
+
+    async def post(self, path: str, **kwargs):
+        return await self._request("POST", path, **kwargs)
+
+    async def put(self, path: str, **kwargs):
+        return await self._request("PUT", path, **kwargs)
+
+    async def delete(self, path: str, **kwargs):
+        return await self._request("DELETE", path, **kwargs)
+
+    # ---------------------------
     # Users
     # ---------------------------
     async def list_users(self) -> List[User]:
-        resp = await self.client.get(f"{self.base_url}/api/users", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get("/api/users")
         return [User(**u) for u in resp.json()]
 
     async def get_user(self, user_id: str) -> User:
-        resp = await self.client.get(f"{self.base_url}/api/users/{user_id}", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get(f"/api/users/{user_id}")
         return User(**resp.json())
 
-    async def create_user(self, username: str, email: str, password: str,
-                          full_name: Optional[str] = None, role: str = "user"):
-        payload = {"username": username, "email": email, "password": password,
-                   "full_name": full_name, "role": role}
-        resp = await self.client.post(f"{self.base_url}/api/users", json=payload, headers=self._headers())
-        await raise_for_status_with_logging(resp)
+    async def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        full_name: Optional[str] = None,
+        role: str = "user"
+    ):
+        payload = {
+            "username": username,
+            "email": email,
+            "password": password,
+            "full_name": full_name,
+            "role": role
+        }
+        resp = await self.post("/api/users", json=payload)
         return resp.json()
 
     async def update_user(self, user_id: str, **kwargs):
-        resp = await self.client.put(f"{self.base_url}/api/users/{user_id}", json=kwargs, headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.put(f"/api/users/{user_id}", json=kwargs)
         return resp.json()
 
     async def delete_user(self, user_id: str):
-        resp = await self.client.delete(f"{self.base_url}/api/users/{user_id}", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.delete(f"/api/users/{user_id}")
         return resp.status_code
 
     # ---------------------------
@@ -177,51 +266,43 @@ class MatchingServiceClient:
     # Subscriptions
     # ---------------------------
     async def list_subscriptions(self) -> List[Subscription]:
-        resp = await self.client.get(f"{self.base_url}/api/subscriptions/", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get("/api/subscriptions/")
         return [Subscription(**s) for s in resp.json()]
 
     async def get_subscription(self, sub_id: str) -> Subscription:
-        resp = await self.client.get(f"{self.base_url}/api/subscriptions/{sub_id}", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get(f"/api/subscriptions/{sub_id}")
         return Subscription(**resp.json())
 
     async def create_subscription(self, topic_filter: str, queue: Optional[str] = None):
-        payload = {"topic_filter": topic_filter, "queue": queue}
-
+        payload = {"topic_filter": topic_filter}
+        if queue:
+            payload["queue"] = queue
         try:
-            resp = await self.client.post(
-                f"{self.base_url}/api/subscriptions/", json=payload, headers=self._headers()
-            )
-            await raise_for_status_with_logging(resp)
-            return resp.json()
-        except HTTPStatusError as e:
-            if e.response.status_code == 409:  # duplicate subscription
+            resp = await self.post("/api/subscriptions/", json=payload)
+            return Subscription(**resp.json())
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 409:
                 self.logger.warning(f"Subscription for '{topic_filter}' already exists")
                 return {"warning": "Subscription already exists", "topic_filter": topic_filter}
             raise
 
     async def update_subscription(self, sub_id: str, **kwargs):
-        resp = await self.client.put(f"{self.base_url}/api/subscriptions/{sub_id}", json=kwargs, headers=self._headers())
-        await raise_for_status_with_logging(resp)
-        return resp.json()
+        resp = await self.put(f"/api/subscriptions/{sub_id}", json=kwargs)
+        return Subscription(**resp.json())
 
     async def delete_subscription(self, sub_id: str):
-        resp = await self.client.delete(f"{self.base_url}/api/subscriptions/{sub_id}", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.delete(f"/api/subscriptions/{sub_id}")
         return resp.status_code
 
     # ---------------------------
     # Publishers
     # ---------------------------
     async def list_publishers(self) -> List[Publisher]:
-        resp = await self.client.get(f"{self.base_url}/api/publishers/", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get("/api/publishers/")
         return [Publisher(**p) for p in resp.json()]
 
     async def get_publisher(self, pub_id: str) -> Publisher:
-        resp = await self.client.get(f"{self.base_url}/api/publishers/{pub_id}", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get(f"/api/publishers/{pub_id}")
         return Publisher(**resp.json())
 
     async def create_publisher(
@@ -231,41 +312,29 @@ class MatchingServiceClient:
         organisation: Optional[str] = None,
         location: Optional[dict] = None,
     ):
-        payload = {
-            "name": name,
-            "description": description,
-            "organisation": organisation,
-            "location": location,
-        }
-
+        payload = {"name": name, "description": description, "organisation": organisation, "location": location}
         try:
-            resp = await self.client.post(
-                f"{self.base_url}/api/publishers/", json=payload, headers=self._headers()
-            )
-            await raise_for_status_with_logging(resp)
-            return resp.json()
-        except HTTPStatusError as e:
-            if e.response.status_code == 409:  # duplicate
+            resp = await self.post("/api/publishers/", json=payload)
+            return Publisher(**resp.json())
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 409:  # duplicate publisher
                 self.logger.warning(f"Publisher '{name}' already exists")
                 return {"warning": "Publisher already exists", "name": name}
             raise
 
     async def update_publisher(self, pub_id: str, **kwargs):
-        resp = await self.client.put(f"{self.base_url}/api/publishers/{pub_id}", json=kwargs, headers=self._headers())
-        await raise_for_status_with_logging(resp)
-        return resp.json()
+        resp = await self.put(f"/api/publishers/{pub_id}", json=kwargs)
+        return Publisher(**resp.json())
 
     async def delete_publisher(self, pub_id: str):
-        resp = await self.client.delete(f"{self.base_url}/api/publishers/{pub_id}", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.delete(f"/api/publishers/{pub_id}")
         return resp.status_code
 
     # ---------------------------
     # Metrics
     # ---------------------------
     async def list_metrics(self) -> List[Metric]:
-        resp = await self.client.get(f"{self.base_url}/api/metrics/", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get("/api/metrics/")
         return [Metric(**m) for m in resp.json()]
 
     # ---------------------------
@@ -273,13 +342,11 @@ class MatchingServiceClient:
     # ---------------------------
     async def test_match(self, topic: str) -> MatchResponse:
         payload = {"topic": topic}
-        resp = await self.client.post(f"{self.base_url}/api/match/test", json=payload, headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.post("/api/match/test", json=payload)
         return MatchResponse(**resp.json())
 
     async def list_match_subscriptions(self) -> List[MatchResult]:
-        resp = await self.client.get(f"{self.base_url}/api/match/subscriptions", headers=self._headers())
-        await raise_for_status_with_logging(resp)
+        resp = await self.get("/api/match/subscriptions")
         return [MatchResult(**s) for s in resp.json()]
 
     # ---------------------------
@@ -290,39 +357,23 @@ class MatchingServiceClient:
         Publish a message to a topic.
         Ensures a durable queue exists for the topic in the exchange.
         """
-        resp = await self.client.post(
-            f"{self.base_url}/api/queues/publish",
-            json={"topic": topic, "payload": payload},
-            headers=self._headers()
-        )
-        await raise_for_status_with_logging(resp)
+        resp = await self.post("/api/queues/publish", json={"topic": topic, "payload": payload})
         return resp.json()
 
-    async def subscribe(self, topic_filter: str) -> str:
+    async def subscribe(self, topic_filter: str) -> dict:
         """
-        Subscribe to a topic filter (supports wildcards). Returns the queue name.
+        Subscribe to a topic filter (supports wildcards).
+        Returns subscription ID, queue name, and filter.
         """
-        # Send the correct JSON key "filter" to match the Flask endpoint
-        resp = await self.client.post(
-            f"{self.base_url}/api/queues/subscribe",
-            json={"filter": topic_filter},
-            headers=self._headers()
-        )
-        await raise_for_status_with_logging(resp)
-        data = resp.json()
-        return data
+        resp = await self.post("/api/queues/subscribe", json={"filter": topic_filter})
+        return resp.json()
 
     async def poll(self, queue: str) -> Optional[dict]:
         """
         Poll a queue for messages (non-blocking).
         Returns None if no message is available.
         """
-        resp = await self.client.post(
-            f"{self.base_url}/api/queues/poll",
-            json={"queue": queue},
-            headers=self._headers()
-        )
-        await raise_for_status_with_logging(resp)
+        resp = await self.post("/api/queues/poll", json={"queue": queue})
         msg = resp.json()
         return msg.get("message")
 
@@ -350,5 +401,67 @@ class MatchingServiceClient:
 
         return asyncio.create_task(poll_loop())
 
-    async def close(self):
-        await self.client.aclose()
+
+    # ---------------------------
+    # Emulators
+    # ---------------------------
+
+    async def list_emulators(self) -> List[Emulator]:
+        """List all emulators visible to the current user"""
+        resp = await self.get("/api/emulators/")
+        return [Emulator(**e) for e in resp.json()]
+
+    async def create_emulator(self, name: str, topic: str, schema: dict, interval: float) -> Emulator:
+        """Create a new emulator"""
+        payload = {"name": name, "topic": topic, "schema": schema, "interval": interval}
+        resp = await self.post("/api/emulators/", json=payload)
+        return Emulator(**resp.json())
+
+    async def get_emulator(self, emulator_id: str) -> Emulator:
+        """Fetch a single emulator by ID"""
+        resp = await self.get(f"/api/emulators/{emulator_id}")
+        return Emulator(**resp.json())
+
+    async def update_emulator(
+        self, emulator_id: str, name: Optional[str] = None, topic: Optional[str] = None,
+        schema: Optional[dict] = None, interval: Optional[float] = None
+    ) -> Emulator:
+        """Update emulator fields"""
+        payload = {}
+        if name is not None:
+            payload["name"] = name
+        if topic is not None:
+            payload["topic"] = topic
+        if schema is not None:
+            payload["schema"] = schema
+        if interval is not None:
+            payload["interval"] = interval
+
+        if not payload:
+            raise ValueError("No fields provided for update")
+
+        resp = await self.put(f"/api/emulators/{emulator_id}", json=payload)
+        return Emulator(**resp.json())
+
+    async def delete_emulator(self, emulator_id: str) -> dict:
+        """Delete an emulator"""
+        resp = await self.delete(f"/api/emulators/{emulator_id}")
+        return resp.json()    
+
+    async def start_emulator(self, emulator_id: str) -> Emulator:
+        """Set an emulator's 'running' attribute to True"""
+        payload = {
+            "running": True
+        }
+
+        resp = await self.put(f"/api/emulators/{emulator_id}", json=payload)
+        return Emulator(**resp.json())
+
+    async def stop_emulator(self, emulator_id: str) -> Emulator:
+        """Set an emulator's 'running' attribute to False"""
+        payload = {
+            "running": False
+        }
+
+        resp = await self.put(f"/api/emulators/{emulator_id}", json=payload)
+        return Emulator(**resp.json())

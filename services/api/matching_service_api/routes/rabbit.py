@@ -1,21 +1,37 @@
 import json
 import pika
+import threading
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from influxdb_client import InfluxDBClient, Point, WritePrecision
 
 from matching_service_api.config import Config
-from matching_service_api.utils import handle_exception, mongo_client
+from matching_service_api.utils import handle_exception, mongo_client, ADMIN_CONFIG_CACHE, get_influx_client
+
 
 rabbit_bp = Blueprint("queues", __name__)
 
-RABBIT_URL = Config.RABBITMQ_URL
-EXCHANGE = Config.RABBITMQ_EXCHANGE
 
+
+
+def flatten_dict(d, parent_key="", sep="_"):
+    """Flatten nested dictionaries for Influx fields."""
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 # -------------------
 # RabbitMQ Connection Helper
 # -------------------
+RABBIT_URL = Config.RABBITMQ_URL
+EXCHANGE = Config.RABBITMQ_EXCHANGE
+
 def get_channel():
     """
     Establish a RabbitMQ connection and return the connection and channel.
@@ -37,10 +53,6 @@ def get_channel():
 @rabbit_bp.route("/publish", methods=["POST"])
 @jwt_required()
 def publish():
-    """
-    Publish a message to a topic.
-    Expected JSON: { "topic": str, "payload": dict }
-    """
     try:
         body = request.get_json() or {}
         topic = body.get("topic")
@@ -49,17 +61,34 @@ def publish():
         if not topic or payload is None:
             return jsonify({"error": "topic and payload required"}), 400
 
+        # ---- Publish to RabbitMQ ----
         connection, channel = get_channel()
         channel.basic_publish(
-            exchange=EXCHANGE,
+            exchange=Config.RABBITMQ_EXCHANGE,
             routing_key=topic,
             body=json.dumps(payload),
             properties=pika.BasicProperties(content_type="application/json", delivery_mode=2),
         )
 
+        # ---- Write to InfluxDB ----
+        import logging
+        write_api, influx_bucket = get_influx_client()
+        fields = flatten_dict(payload)
+        logging.critical(fields)
+        point = Point("messages").tag("topic", topic).time(datetime.utcnow(), WritePrecision.NS)
+        for k, v in fields.items():
+            if isinstance(v, (int, float, bool, str)):
+                point = point.field(k, v)
+
+        write_api.write(bucket=influx_bucket, record=point)
+        logging.critical(topic)
+        logging.critical(point)
+
         return jsonify({"status": "published", "topic": topic}), 200
+
     except Exception as e:
         return handle_exception(e, msg="Failed to publish message", status_code=503)
+
     finally:
         if "connection" in locals() and connection:
             connection.close()

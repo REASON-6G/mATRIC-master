@@ -4,7 +4,7 @@ from bson import ObjectId
 from werkzeug.security import generate_password_hash
 from pydantic import ValidationError
 
-from matching_service_api.utils import handle_exception, mongo_client
+from matching_service_api.utils import handle_exception, mongo_client, role_required
 from matching_service_api.models import UserModel
 
 users_bp = Blueprint("users", __name__)
@@ -34,6 +34,7 @@ def serialize_user(user_doc):
 # ---- Routes ----
 @users_bp.route("/", methods=["GET"])
 @jwt_required()
+@role_required("user", "admin")
 def list_users():
     """List all users (admin only)"""
     try:
@@ -48,6 +49,7 @@ def list_users():
 
 @users_bp.route("/<user_id>", methods=["GET"])
 @jwt_required()
+@role_required("user", "admin")
 def get_user(user_id):
     """Get a single user by ID"""
     try:
@@ -63,6 +65,7 @@ def get_user(user_id):
 
 @users_bp.route("/", methods=["POST"])
 @jwt_required()
+@role_required("user", "admin")
 def create_user():
     """
     Create a new user or agent.
@@ -118,6 +121,7 @@ def create_user():
 
 @users_bp.route("/<user_id>", methods=["PUT"])
 @jwt_required()
+@role_required("user", "admin")
 def update_user(user_id):
     """Update user (self or admin)"""
     try:
@@ -166,6 +170,7 @@ def update_user(user_id):
 
 @users_bp.route("/<user_id>", methods=["DELETE"])
 @jwt_required()
+@role_required("user", "admin")
 def delete_user(user_id):
     """Delete user (self or admin)"""
     try:

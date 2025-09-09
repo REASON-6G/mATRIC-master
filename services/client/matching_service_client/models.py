@@ -48,3 +48,14 @@ class MatchResult(BaseModel):
 class MatchResponse(BaseModel):
     topic: str
     matches: List[MatchResult]
+
+class Emulator(BaseModel):
+    id: str
+    name: str
+    owner_id: str
+    topic: str
+    schema: dict
+    interval: float
+    running: bool
+    created_at: datetime
+    updated_at: Optional[datetime]

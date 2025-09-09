@@ -4,7 +4,7 @@ from pymongo.errors import PyMongoError
 import fnmatch
 from pydantic import ValidationError
 
-from matching_service_api.utils import mongo_client, handle_exception
+from matching_service_api.utils import mongo_client, handle_exception, role_required
 from matching_service_api.models import MatchRequest, MatchResponse, MatchResult
 
 match_bp = Blueprint("match", __name__)
@@ -61,6 +61,7 @@ def test_match():
 
 @match_bp.route("/subscriptions", methods=["GET"])
 @jwt_required()
+@role_required("user", "admin")
 def list_subscriptions():
     """
     Admin-only: list all active subscriptions with user and filter.

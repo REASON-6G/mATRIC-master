@@ -3,12 +3,8 @@ from matching_service_client import MatchingServiceClient
 
 async def main():
     client = MatchingServiceClient("http://localhost:5000")
-    await client.login("test", "asdasd123")
+    await client.login_with_token("hinTX2AP-jUZsDkfn6oqlfH-rIxNnf4kUIYvqexOyjc")
     print("Logged in")
-
-    # Create a topic
-    topic = await client.create_topic("uk/bristol/net/router8", description="Router telemetry stream")
-    print("Topic created:", topic)
 
     # List topics
     topics = await client.list_topics()

@@ -10,16 +10,21 @@ from matching_service_api.routes.metrics import metrics_bp
 from matching_service_api.routes.admin import admin_bp
 from matching_service_api.routes.rabbit import rabbit_bp
 from matching_service_api.routes.match import match_bp
+from matching_service_api.routes.emulators import emulators_bp
 from matching_service_api.routes.auth import auth_bp
-from matching_service_api.utils import jwt_client, mongo_client
+from matching_service_api.utils import jwt_client, mongo_client, initialize_config, load_admin_config
 
 logging.basicConfig(level=logging.INFO)
+
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config())
     app.logger.setLevel(logging.INFO)
-    CORS(app, supports_credentials=True)
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": "*"}},
+        supports_credentials=True)
 
     # init extensions
     jwt_client.init_app(app)
@@ -36,6 +41,12 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(rabbit_bp, url_prefix="/api/queues")
     app.register_blueprint(match_bp, url_prefix="/api/match")
+    app.register_blueprint(emulators_bp, url_prefix="/api/emulators")
+
+    # ensure config document exists
+    with app.app_context():
+        initialize_config()
+        load_admin_config
 
 
     @app.get("/health")
