@@ -7,7 +7,7 @@ import { showApiError } from "@/lib/showApiError";
 
 interface CreatePublisherModalProps {
   onClose: () => void;
-  onCreated: (publisherId: string) => void; // called after a publisher is successfully created
+  onCreated: (publisherId: string) => void;
 }
 
 export default function CreatePublisherModal({ onClose, onCreated }: CreatePublisherModalProps) {
@@ -15,6 +15,10 @@ export default function CreatePublisherModal({ onClose, onCreated }: CreatePubli
 
   const [name, setName] = useState("");
   const [organisation, setOrganisation] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [creating, setCreating] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,16 +26,28 @@ export default function CreatePublisherModal({ onClose, onCreated }: CreatePubli
     setCreating(true);
 
     try {
-      const res = await api.post<{ id: string; name: string; organisation?: string; api_token: string }>(
-        "/api/publishers/",
-        { name, organisation }
-      );
+      const res = await api.post<{
+        id: string;
+        name: string;
+        organisation?: string;
+        country: string;
+        city: string;
+        location?: { type: "Point"; coordinates: [number, number] };
+        api_token: string;
+      }>("/api/publishers/", {
+        name,
+        organisation,
+        country,
+        city,
+        location: {
+          type: "Point",
+          coordinates: [parseFloat(longitude) || 0, parseFloat(latitude) || 0],
+        },
+      });
 
       const newPublisher = res.data;
       onCreated(newPublisher.id);
-      onClose(); // close creation modal
-
-      // show API token in a modal
+      onClose();
       toast.addToast("Publisher created. Opening API token modal...", "info");
     } catch (err: unknown) {
       showApiError(toast, err);
@@ -64,6 +80,36 @@ export default function CreatePublisherModal({ onClose, onCreated }: CreatePubli
             placeholder="Organisation"
             value={organisation}
             onChange={(e) => setOrganisation(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+          <input
+            type="text"
+            placeholder="City"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Latitude"
+            value={latitude}
+            onChange={(e) => setLatitude(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+          <input
+            type="text"
+            placeholder="Longitude"
+            value={longitude}
+            onChange={(e) => setLongitude(e.target.value)}
             className="w-full border rounded px-3 py-2"
           />
           <button

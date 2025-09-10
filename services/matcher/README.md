@@ -39,3 +39,11 @@ The Matcher Service reads configuration from environment variables. Create a `.e
 poetry env activate
 poetry install
 poetry run matcher
+
+## Topic structure
+
+<country>/<city>/<organisation>/<devicename>/<devicetype>/<component>/<subject>
+
+for example
+
+UK/Bath/ACME/RU-3/RU/CPU/sensors

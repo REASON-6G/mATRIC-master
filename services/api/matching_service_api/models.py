@@ -40,6 +40,19 @@ class TopicModel(BaseModel):
     topic: str
     description: Optional[str] = None
     publisher_id: Optional[str] = None
+    device_name: Optional[str] = None
+    device_type: Optional[str] = None
+    component: Optional[str] = None
+    subject: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class TopicCreateRequest(BaseModel):
+    description: Optional[str] = None
+    publisher_id: Optional[str] = None
+    device_name: Optional[str] = None
+    device_type: Optional[str] = None
+    component: Optional[str] = None
+    subject: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -56,11 +69,24 @@ class PublisherModel(BaseModel):
     name: str
     api_token: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     description: Optional[str] = None
-    organisation: Optional[str] = None
+    country: str
+    city: str
+    organisation: str
     location: Optional[dict] = Field(
         None, example={"type": "Point", "coordinates": [-2.58791, 51.4545]}
     )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class PublisherUpdateModel(BaseModel):
+    name: Optional[str] = None
+    api_token: Optional[str] = None
+    description: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    organisation: Optional[str] = None
+    location: Optional[dict] = None  # {type: "Point", coordinates: [lon, lat]}
+    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class MetricModel(BaseModel):
@@ -110,13 +136,25 @@ class SubscriptionResponse(SubscriptionModel):
     id: str
 
 
-class PublisherResponse(PublisherModel):
+class PublisherResponse(BaseModel):
     id: str
+    name: str
+    country: str
+    city: str
+    organisation: str
+    api_token: str
+    created_at: datetime
+    location: Optional[dict] = None
 
 
 class TopicResponse(TopicModel):
     id: str
     publisher: Optional[PublisherResponse] = None
+    topic: Optional[str] = None
+    device_name: Optional[str] = None
+    device_type: Optional[str] = None
+    component: Optional[str] = None
+    subject: Optional[str] = None
 
 
 # -------------------

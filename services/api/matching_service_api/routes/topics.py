@@ -8,42 +8,62 @@ from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
 
 from matching_service_api.utils import handle_exception, mongo_client, role_required
-from matching_service_api.models import TopicModel, PublisherResponse
+from matching_service_api.models import TopicModel, TopicCreateRequest, PublisherResponse, mongo_to_dict
 
 topics_bp = Blueprint("topics", __name__)
 
 
 # ---- Helpers ----
 def serialize_topic(topic: dict) -> dict:
-    """Convert MongoDB document to JSON-serializable dict"""
-    topic = dict(topic)  # avoid mutating original
-    topic["id"] = str(topic["_id"])
-    topic.pop("_id", None)
+    """Serialize topic with publisher info and full_topic field."""
+    t_dict = mongo_to_dict(topic)
+    publisher = None
+    full_topic = None
 
-    # Convert datetime fields to ISO format
-    for field in ["created_at", "updated_at"]:
-        if field in topic and isinstance(topic[field], datetime):
-            topic[field] = topic[field].isoformat()
+    if t_dict.get("publisher_id"):
+        pub = mongo_client.db.publishers.find_one({"_id": ObjectId(t_dict["publisher_id"])})
+        if pub:
+            pub_dict = mongo_to_dict(pub)
+            publisher = pub_dict
+            parts = [
+                pub_dict.get("country"),
+                pub_dict.get("city"),
+                pub_dict.get("organisation"),
+                t_dict.get("topic"),
+            ]
+            # Filter out None/empty strings
+            full_topic = "/".join(parts)
+            t_dict["country"] = pub_dict.get("country")
+            t_dict["city"] = pub_dict.get("city")
+            t_dict["organisation"] = pub_dict.get("organisation")
 
-    # Include publisher info if available
-    publisher_id = topic.get("publisher_id")
-    if publisher_id:
-        pub_doc = mongo_client.db.publishers.find_one({"_id": ObjectId(publisher_id)})
-        if pub_doc:
-            topic["publisher"] = PublisherResponse(**pub_doc, id=str(pub_doc["_id"])).model_dump()
-        else:
-            topic["publisher"] = None
-    else:
-        topic["publisher"] = None
+    t_dict["publisher"] = publisher
+    t_dict["full_topic"] = full_topic or t_dict["topic"]
+    return t_dict
 
-    return topic
+
+def build_full_topic(topic_doc: dict, publisher_doc: dict) -> str:
+    """
+    Combine publisher fields + topic string.
+    """
+    parts = [
+        publisher_doc.get("country"),
+        publisher_doc.get("city"),
+        publisher_doc.get("organisation"),
+        topic_doc.get("device_name"),
+        topic_doc.get("device_type"),
+        topic_doc.get("component"),
+        topic_doc.get("subject")
+
+    ]
+    return "/".join(parts)
 
 
 # ---- Routes ----
 @topics_bp.route("/", methods=["GET"])
 @jwt_required()
 def list_topics():
-    """List all topics"""
+    """List all topics with publisher prefix"""
     try:
         topics = list(mongo_client.db.topics.find())
         topics = [serialize_topic(t) for t in topics]
@@ -55,7 +75,7 @@ def list_topics():
 @topics_bp.route("/<topic_id>", methods=["GET"])
 @jwt_required()
 def get_topic(topic_id):
-    """Get a topic by ID"""
+    """Get a topic by ID (with publisher prefix)"""
     try:
         topic = mongo_client.db.topics.find_one({"_id": ObjectId(topic_id)})
         if not topic:
@@ -69,22 +89,24 @@ def get_topic(topic_id):
 @jwt_required()
 @role_required("user", "admin")
 def create_topic():
-    """Create a new topic, optionally associate a publisher, and create a RabbitMQ queue"""
+    """Create a new topic (publisher required), and create a RabbitMQ queue"""
     try:
         data = request.get_json() or {}
-        topic_data = TopicModel(**data)
+        print(data)
+        topic_data = TopicCreateRequest(**data)
         topic_dict = topic_data.model_dump()
 
         publisher_id = topic_dict.get("publisher_id")
-        if publisher_id:
-            # Check publisher exists
-            publisher = mongo_client.db.publishers.find_one({"_id": ObjectId(publisher_id)})
-            if not publisher:
-                return jsonify({"error": f"Publisher with id {publisher_id} not found"}), 404
-            # Ensure publisher not already assigned
-            existing = mongo_client.db.topics.find_one({"publisher_id": publisher_id})
-            if existing:
-                return jsonify({"error": "Publisher already assigned to another topic"}), 409
+        if not publisher_id:
+            return jsonify({"error": "publisher_id is required"}), 400
+
+        # Validate publisher exists
+        publisher = mongo_client.db.publishers.find_one({"_id": ObjectId(publisher_id)})
+        if not publisher:
+            return jsonify({"error": f"Publisher with id {publisher_id} not found"}), 404
+        
+        # Build the full topic name
+        topic_dict["topic"] = build_full_topic(topic_dict, publisher)
 
         # Insert into MongoDB
         try:
@@ -94,7 +116,7 @@ def create_topic():
 
         topic_id = str(result.inserted_id)
 
-        # Create RabbitMQ queue
+        # Create RabbitMQ queue (still relative name)
         queue_name = topic_dict["topic"]
         try:
             connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -107,9 +129,11 @@ def create_topic():
         return jsonify({"id": topic_id}), 201
 
     except ValidationError as e:
+        print(e)
         return jsonify({"errors": e.errors()}), 422
     except Exception as e:
         return handle_exception(e, msg="Failed to create topic", status_code=500)
+
 
 
 @topics_bp.route("/<topic_id>", methods=["PUT"])
@@ -119,12 +143,15 @@ def update_topic(topic_id):
     """Update a topic (partial updates allowed), optionally assign/change publisher"""
     try:
         data = request.get_json() or {}
+        print(data)
         update_data = {}
-        if "topic" in data:
-            update_data["topic"] = data["topic"]
-        if "description" in data:
-            update_data["description"] = data["description"]
 
+        # Updatable fields
+        for field in ["topic", "description", "device_name", "device_type", "component", "subject"]:
+            if field in data:
+                update_data[field] = data[field]
+
+        # Handle publisher change
         if "publisher_id" in data:
             publisher_id = data["publisher_id"]
             if publisher_id:
@@ -132,13 +159,6 @@ def update_topic(topic_id):
                 publisher = mongo_client.db.publishers.find_one({"_id": ObjectId(publisher_id)})
                 if not publisher:
                     return jsonify({"error": f"Publisher with id {publisher_id} not found"}), 404
-                # Ensure publisher not already assigned to another topic
-                existing = mongo_client.db.topics.find_one({
-                    "publisher_id": publisher_id,
-                    "_id": {"$ne": ObjectId(topic_id)}
-                })
-                if existing:
-                    return jsonify({"error": "Publisher already assigned to another topic"}), 409
             update_data["publisher_id"] = publisher_id
 
         if not update_data:
@@ -152,7 +172,8 @@ def update_topic(topic_id):
         if result.matched_count == 0:
             return jsonify({"error": "Topic not found"}), 404
 
-        return jsonify({"id": topic_id, **update_data}), 200
+        updated = mongo_client.db.topics.find_one({"_id": ObjectId(topic_id)})
+        return jsonify(serialize_topic(updated)), 200
 
     except ValidationError as e:
         return jsonify({"errors": e.errors()}), 422

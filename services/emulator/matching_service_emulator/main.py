@@ -41,28 +41,40 @@ running_emulator_tasks = {}
 def generate_message(schema: dict) -> dict:
     """
     Generate a random message based on a JSON Schema (Draft-04).
-    Supports integer, number, string, boolean types.
+    Supports primitive types, nested objects, and arrays.
     """
     validator = Draft4Validator(schema)
-    message = {}
 
-    for prop, prop_schema in schema.get("properties", {}).items():
-        prop_type = prop_schema.get("type")
-        if prop_type == "integer":
-            message[prop] = random.randint(0, 100)
-        elif prop_type == "number":
-            message[prop] = round(random.uniform(0, 100), 2)
-        elif prop_type == "string":
-            message[prop] = fake.word()
-        elif prop_type == "boolean":
-            message[prop] = random.choice([True, False])
+    def generate_for_schema(sch):
+        sch_type = sch.get("type")
+        if sch_type == "object":
+            msg = {}
+            props = sch.get("properties", {})
+            for prop, prop_schema in props.items():
+                msg[prop] = generate_for_schema(prop_schema)
+            # Ensure required fields exist
+            for req in sch.get("required", []):
+                if req not in msg:
+                    msg[req] = None
+            return msg
+
+        elif sch_type == "array":
+            items_schema = sch.get("items", {})
+            length = random.randint(1, 3)  # small array
+            return [generate_for_schema(items_schema) for _ in range(length)]
+
+        elif sch_type == "integer":
+            return random.randint(0, 100)
+        elif sch_type == "number":
+            return round(random.uniform(0, 100), 2)
+        elif sch_type == "string":
+            return fake.word()
+        elif sch_type == "boolean":
+            return random.choice([True, False])
         else:
-            message[prop] = None
+            return None
 
-    # Ensure required fields exist
-    for req in schema.get("required", []):
-        if req not in message:
-            message[req] = None
+    message = generate_for_schema(schema)
 
     # Validate message against schema
     errors = list(validator.iter_errors(message))
@@ -70,6 +82,7 @@ def generate_message(schema: dict) -> dict:
         logging.warning(f"Generated message validation errors: {errors}")
 
     return message
+
 
 # -------------------------
 # Emulator Task

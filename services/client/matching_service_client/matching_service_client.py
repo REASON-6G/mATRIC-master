@@ -172,6 +172,22 @@ class MatchingServiceClient:
         if not self.access_token:
             raise RuntimeError("Not authenticated")
         return {"Authorization": f"Bearer {self.access_token}"}
+    
+    # ---------------------------
+    # Teardown
+    # ---------------------------
+    
+    async def close(self):
+        """
+        Close the underlying HTTP client session.
+        """
+        await self.client.aclose()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
 
     # ---------------------------
     # Public HTTP methods

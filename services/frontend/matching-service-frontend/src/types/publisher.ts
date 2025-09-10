@@ -3,6 +3,8 @@ export interface Publisher {
   name: string;                // Name of the publisher
   description?: string;        // Optional description
   organisation?: string;       // Optional organisation name
+  country?: string;            // Country (used for topic prefix)
+  city?: string;               // City (used for topic prefix)
   location?: {
     type: "Point";
     coordinates: [number, number]; // [longitude, latitude]
