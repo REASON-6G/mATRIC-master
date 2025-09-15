@@ -8,7 +8,7 @@ import logging
 from matching_service_api.utils import handle_exception, mongo_client
 from matching_service_api.models import SubscriptionModel
 
-subs_bp = Blueprint("subscriptions", __name__)
+subscriptions_bp = Blueprint("subscriptions", __name__)
 
 
 # ---- Helpers ----
@@ -19,7 +19,7 @@ def serialize_subscription(sub):
 
 
 # ---- Routes ----
-@subs_bp.route("/", methods=["GET"])
+@subscriptions_bp.route("/", methods=["GET"])
 @jwt_required()
 def list_subscriptions():
     """List subscriptions for current user"""
@@ -32,7 +32,7 @@ def list_subscriptions():
         return handle_exception(e, msg="Failed to list subscriptions", status_code=500)
 
 
-@subs_bp.route("/<sub_id>", methods=["GET"])
+@subscriptions_bp.route("/<sub_id>", methods=["GET"])
 @jwt_required()
 def get_subscription(sub_id):
     """Get subscription by ID"""
@@ -45,7 +45,7 @@ def get_subscription(sub_id):
         return handle_exception(e, msg="Failed to fetch subscription", status_code=500)
 
 
-@subs_bp.route("/", methods=["POST"])
+@subscriptions_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_subscription():
     """Create a new subscription for the current user"""
@@ -73,7 +73,7 @@ def create_subscription():
         return handle_exception(e, msg="Failed to create subscription", status_code=500)
 
 
-@subs_bp.route("/<sub_id>", methods=["PUT"])
+@subscriptions_bp.route("/<sub_id>", methods=["PUT"])
 @jwt_required()
 def update_subscription(sub_id):
     """Update a subscription (partial updates allowed)"""
@@ -104,7 +104,7 @@ def update_subscription(sub_id):
         return handle_exception(e, msg="Failed to update subscription", status_code=500)
 
 
-@subs_bp.route("/<sub_id>", methods=["DELETE"])
+@subscriptions_bp.route("/<sub_id>", methods=["DELETE"])
 @jwt_required()
 def delete_subscription(sub_id):
     """Delete a subscription"""

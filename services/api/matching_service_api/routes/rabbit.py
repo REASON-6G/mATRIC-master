@@ -5,9 +5,11 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from influxdb_client import InfluxDBClient, Point, WritePrecision
+from bson import ObjectId
 
 from matching_service_api.config import Config
-from matching_service_api.utils import handle_exception, mongo_client, ADMIN_CONFIG_CACHE, get_influx_client
+from matching_service_api.utils import handle_exception, mongo_client, ADMIN_CONFIG_CACHE, get_influx_client, role_required
+from matching_service_api.models import TopicModel, PublisherModel
 
 
 rabbit_bp = Blueprint("queues", __name__)
@@ -52,39 +54,62 @@ def get_channel():
 # -------------------
 @rabbit_bp.route("/publish", methods=["POST"])
 @jwt_required()
+@role_required("publisher")
 def publish():
     try:
         body = request.get_json() or {}
-        topic = body.get("topic")
+        topic_str = body.get("topic")
         payload = body.get("payload")
 
-        if not topic or payload is None:
+        if not topic_str or payload is None:
             return jsonify({"error": "topic and payload required"}), 400
+
+        # Normalize to lowercase
+        topic_str = topic_str.lower()
+
+        # Look up topic in Mongo
+        db_topic = mongo_client.db.topics.find_one({"topic": topic_str})
+        if not db_topic:
+            return jsonify({"error": "Topic not found"}), 404
+
+        # Check publisher exists
+        publisher_id = db_topic.get("publisher_id")
+        if not publisher_id:
+            return jsonify({"error": "Topic has no publisher"}), 400
+
+        db_publisher = mongo_client.db.publishers.find_one({"_id": ObjectId(publisher_id)})
+        if not db_publisher:
+            return jsonify({"error": "Publisher not found"}), 404
+
+        # (optional) check ownership if you want to enforce user restriction:
+        # current_user = get_jwt_identity()
+        # if str(db_publisher["user_id"]) != current_user:
+        #     return jsonify({"error": "Not authorized to publish to this topic"}), 403
 
         # ---- Publish to RabbitMQ ----
         connection, channel = get_channel()
         channel.basic_publish(
             exchange=Config.RABBITMQ_EXCHANGE,
-            routing_key=topic,
+            routing_key=topic_str,
             body=json.dumps(payload),
             properties=pika.BasicProperties(content_type="application/json", delivery_mode=2),
         )
 
         # ---- Write to InfluxDB ----
-        import logging
         write_api, influx_bucket = get_influx_client()
         fields = flatten_dict(payload)
-        logging.critical(fields)
-        point = Point("messages").tag("topic", topic).time(datetime.utcnow(), WritePrecision.NS)
+        point = (
+            Point("messages")
+            .tag("topic", topic_str)
+            .time(datetime.utcnow(), WritePrecision.NS)
+        )
         for k, v in fields.items():
             if isinstance(v, (int, float, bool, str)):
                 point = point.field(k, v)
 
         write_api.write(bucket=influx_bucket, record=point)
-        logging.critical(topic)
-        logging.critical(point)
 
-        return jsonify({"status": "published", "topic": topic}), 200
+        return jsonify({"status": "published", "topic": topic_str}), 200
 
     except Exception as e:
         return handle_exception(e, msg="Failed to publish message", status_code=503)
@@ -94,11 +119,14 @@ def publish():
             connection.close()
 
 
+
+
 # -------------------
 # Subscribe (durable queue)
 # -------------------
 @rabbit_bp.route("/subscribe", methods=["POST"])
 @jwt_required()
+@role_required("subscriber")
 def subscribe():
     """
     Create a durable queue and bind it to a topic filter.
@@ -123,7 +151,6 @@ def subscribe():
             # Create a durable queue per subscription
             connection, channel = get_channel()
             # Generate a unique queue name using ObjectId
-            from bson import ObjectId
             subscription_id = str(ObjectId())
             queue_name = f"sub_{user_id}_{subscription_id}"
             channel.queue_declare(queue=queue_name, durable=True)
@@ -154,6 +181,7 @@ def subscribe():
 # -------------------
 @rabbit_bp.route("/poll", methods=["POST"])
 @jwt_required()
+@role_required("subscriber")
 def poll():
     """
     Poll a given queue for messages (non-blocking).

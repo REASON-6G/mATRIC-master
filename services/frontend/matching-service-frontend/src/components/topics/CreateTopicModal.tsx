@@ -33,7 +33,7 @@ export default function CreateTopicModal({ publishers, onClose, onCreated }: Cre
     deviceType,
     component,
     subject,
-  ].filter(Boolean).join("/");
+  ].filter(Boolean).join("/").toLowerCase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

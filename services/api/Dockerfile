@@ -14,7 +14,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install --no-dev --no-interaction --no-ansi
 
 # Copy application code
-COPY app /app/app
+COPY matching_service_api /app/matching_service_api
 
 # Expose port
 ENV PORT=8000

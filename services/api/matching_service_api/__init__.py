@@ -4,8 +4,9 @@ from flask_cors import CORS
 from matching_service_api.config import Config
 from matching_service_api.routes.users import users_bp
 from matching_service_api.routes.topics import topics_bp
-from matching_service_api.routes.subscriptions import subs_bp
+from matching_service_api.routes.subscriptions import subscriptions_bp
 from matching_service_api.routes.publishers import pubs_bp
+from matching_service_api.routes.subscribers import subs_bp
 from matching_service_api.routes.metrics import metrics_bp
 from matching_service_api.routes.admin import admin_bp
 from matching_service_api.routes.rabbit import rabbit_bp
@@ -15,6 +16,7 @@ from matching_service_api.routes.auth import auth_bp
 from matching_service_api.utils import jwt_client, mongo_client, initialize_config, load_admin_config
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("pika").setLevel(logging.WARNING)
 
 
 def create_app():
@@ -35,8 +37,9 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(topics_bp, url_prefix="/api/topics")
-    app.register_blueprint(subs_bp, url_prefix="/api/subscriptions")
+    app.register_blueprint(subscriptions_bp, url_prefix="/api/subscriptions")
     app.register_blueprint(pubs_bp, url_prefix="/api/publishers")
+    app.register_blueprint(subs_bp, url_prefix="/api/subscribers")
     app.register_blueprint(metrics_bp, url_prefix="/api/metrics")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(rabbit_bp, url_prefix="/api/queues")

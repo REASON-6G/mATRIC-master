@@ -29,7 +29,7 @@ const TopicsTable = forwardRef<TopicsTableHandle, TopicsTableProps>(
       setLoading(true);
       try {
         const [topicsRes, pubsRes] = await Promise.all([
-          api.get<Topic[]>("/api/topics/"),
+          api.get<Topic[]>("/api/topics/mine"),
           api.get<Publisher[]>("/api/publishers/"),
         ]);
         setTopics(topicsRes.data);
@@ -88,6 +88,7 @@ const TopicsTable = forwardRef<TopicsTableHandle, TopicsTableProps>(
               <th className="border px-2 py-1">Component</th>
               <th className="border px-2 py-1">Subject</th>
               <th className="border px-2 py-1">Topic String</th>
+              <th className="border px-2 py-1">Created at</th>
               <th className="border px-2 py-1">Actions</th>
             </tr>
           </thead>

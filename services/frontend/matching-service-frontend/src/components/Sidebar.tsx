@@ -7,8 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 
 const menuItems = [
   { name: "Home", href: "/" },
-  { name: "Topics", href: "/topics", protected: true },
   { name: "Publishers", href: "/publishers", protected: true },
+  { name: "Topics", href: "/topics", protected: true },
   { name: "Subscribers", href: "/subscribers", protected: true },
   { name: "Emulators", href: "/emulators", protected: true },
   { name: "Data", href: "/data", protected: true },

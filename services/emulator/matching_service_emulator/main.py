@@ -60,8 +60,14 @@ def generate_message(schema: dict) -> dict:
 
         elif sch_type == "array":
             items_schema = sch.get("items", {})
-            length = random.randint(1, 3)  # small array
-            return [generate_for_schema(items_schema) for _ in range(length)]
+            length = random.randint(1, 3)
+            
+            # Handle tuple validation (list of schemas)
+            if isinstance(items_schema, list):
+                return [generate_for_schema(items_schema[i % len(items_schema)]) for i in range(length)]
+            else:
+                return [generate_for_schema(items_schema) for _ in range(length)]
+
 
         elif sch_type == "integer":
             return random.randint(0, 100)
@@ -89,7 +95,7 @@ def generate_message(schema: dict) -> dict:
 # -------------------------
 async def run_emulator_task(emulator_doc):
     emulator_id = str(emulator_doc["_id"])
-    publisher_id = emulator_doc["publisher_id"]
+    publisher_id = emulator_doc.get("publisher_id")
 
     # Fetch publisher API token
     publisher_doc = db.publishers.find_one({"_id": ObjectId(publisher_id)})
@@ -124,18 +130,40 @@ async def run_emulator_task(emulator_doc):
             if not emulator_doc or not emulator_doc.get("running"):
                 break
 
-            topic = emulator_doc.get("topic")
-            schema = emulator_doc.get("msg_schema")
             interval = emulator_doc.get("interval", 1)
+            topic_id = emulator_doc.get("topic_id")
+            schema = emulator_doc.get("msg_schema")
+
+            # Skip iteration if topic or schema missing
+            if not topic_id:
+                logger.warning(f"No topic_id set for emulator {emulator_id}, skipping iteration")
+                await asyncio.sleep(interval)
+                continue
+
+            topic_doc = db.topics.find_one({"_id": ObjectId(topic_id)})
+            if not topic_doc or not topic_doc.get("topic"):
+                logger.warning(f"Topic {topic_id} not found, skipping iteration")
+                await asyncio.sleep(interval)
+                continue
+
+            topic = topic_doc["topic"]
+
+            if not schema:
+                logger.warning(f"No schema set for emulator {emulator_id}, skipping iteration")
+                await asyncio.sleep(interval)
+                continue
 
             # Generate message using JSON Schema
             try:
                 message = generate_message(schema)
+                if not message:
+                    raise ValueError("Generated message is empty")
             except Exception as e:
                 logger.error(f"Failed to generate message: {e}")
                 await asyncio.sleep(interval)
                 continue
 
+            # Publish
             try:
                 await client.publish(topic, message)
                 logger.info(f"Published to {topic}: {message}")
@@ -143,6 +171,7 @@ async def run_emulator_task(emulator_doc):
                 logger.error(f"Publish error: {e}")
 
             await asyncio.sleep(interval)
+
     finally:
         await client.close()
         logger.info(f"Emulator {emulator_id} stopped")
@@ -160,19 +189,25 @@ async def emulator_polling_loop():
         for doc in emulator_docs:
             eid = str(doc["_id"])
             running_flag = doc.get("running", False)
+            topic_id = doc.get("topic_id")
+            schema = doc.get("msg_schema")
 
-            if running_flag and eid not in running_emulator_tasks:
+            # Determine if emulator is valid to run
+            is_valid = running_flag and topic_id and schema
+            if is_valid and eid not in running_emulator_tasks:
                 logging.info("Starting emulator task %s", eid)
                 task = asyncio.create_task(run_emulator_task(doc))
                 running_emulator_tasks[eid] = task
-            elif not running_flag and eid in running_emulator_tasks:
+
+            elif (not is_valid or not running_flag) and eid in running_emulator_tasks:
                 logging.info("Stopping emulator task %s", eid)
-                running_emulator_tasks[eid].cancel()
-                try:
-                    await running_emulator_tasks[eid]
-                except asyncio.CancelledError:
-                    pass
-                running_emulator_tasks.pop(eid, None)
+                task = running_emulator_tasks.pop(eid, None)
+                if task:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        logging.info("Emulator task %s cancelled", eid)
 
         await asyncio.sleep(Config.POLL_INTERVAL)
 

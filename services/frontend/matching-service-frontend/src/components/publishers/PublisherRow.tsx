@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useToast } from "@/context/ToastContext";
 import api from "@/lib/api";
 import { showApiError } from "@/lib/showApiError";
+import { FaKey, FaTrash } from "react-icons/fa";
 import type { Publisher } from "@/types/publisher";
 
 interface PublisherRowProps {
@@ -22,6 +23,9 @@ export default function PublisherRow({ publisher, onViewToken, onRefresh }: Publ
   const [latitude, setLatitude] = useState(publisher.location?.coordinates?.[1] ?? "");
   const [longitude, setLongitude] = useState(publisher.location?.coordinates?.[0] ?? "");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const disabled = saving || deleting;
 
   const saveField = async (field: string, value: any) => {
     setSaving(true);
@@ -32,7 +36,6 @@ export default function PublisherRow({ publisher, onViewToken, onRefresh }: Publ
         const latVal = field === "latitude" ? value : latitude;
         const lonVal = field === "longitude" ? value : longitude;
 
-        // Only send if both lat and long are non-empty and valid numbers
         if (latVal !== "" && lonVal !== "") {
           const latNum = parseFloat(latVal);
           const lonNum = parseFloat(lonVal);
@@ -50,14 +53,12 @@ export default function PublisherRow({ publisher, onViewToken, onRefresh }: Publ
         payload[field] = value;
       }
 
-      // Only send payload if it has at least one key
       if (Object.keys(payload).length > 0) {
         await api.put(`/api/publishers/${publisher.id}`, payload);
         onRefresh();
       }
     } catch (err: unknown) {
       showApiError(toast, err);
-      // revert on error
       setName(publisher.name);
       setOrganisation(publisher.organisation ?? "");
       setCountry(publisher.country ?? "");
@@ -69,86 +70,96 @@ export default function PublisherRow({ publisher, onViewToken, onRefresh }: Publ
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete publisher "${publisher.name}"?`)) return;
+
+    setDeleting(true);
+    try {
+      await api.delete(`/api/publishers/${publisher.id}`);
+      toast.addToast(`Publisher "${publisher.name}" deleted`, "success");
+      onRefresh();
+    } catch (err) {
+      showApiError(toast, err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
-    <tr>
-      {/** Name **/}
+    <tr className={deleting ? "opacity-50" : ""}>
       <td className="border px-2 py-1">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => saveField("name", name)}
-          disabled={saving}
+          disabled={disabled}
           className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5"
         />
       </td>
-
-      {/** Organisation **/}
       <td className="border px-2 py-1">
         <input
           value={organisation}
           onChange={(e) => setOrganisation(e.target.value)}
           onBlur={() => saveField("organisation", organisation)}
-          disabled={saving}
+          disabled={disabled}
           className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5"
         />
       </td>
-
-      {/** Country **/}
       <td className="border px-2 py-1">
         <input
           value={country}
           onChange={(e) => setCountry(e.target.value)}
           onBlur={() => saveField("country", country)}
-          disabled={saving}
+          disabled={disabled}
           className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5"
         />
       </td>
-
-      {/** City **/}
       <td className="border px-2 py-1">
         <input
           value={city}
           onChange={(e) => setCity(e.target.value)}
           onBlur={() => saveField("city", city)}
-          disabled={saving}
+          disabled={disabled}
           className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5"
         />
       </td>
-
-      {/** Latitude **/}
       <td className="border px-2 py-1">
         <input
           type="number"
           value={latitude}
           onChange={(e) => setLatitude(e.target.value)}
           onBlur={() => saveField("latitude", latitude)}
-          disabled={saving}
+          disabled={disabled}
           className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5"
         />
       </td>
-
-      {/** Longitude **/}
       <td className="border px-2 py-1">
         <input
           type="number"
           value={longitude}
           onChange={(e) => setLongitude(e.target.value)}
           onBlur={() => saveField("longitude", longitude)}
-          disabled={saving}
+          disabled={disabled}
           className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5"
         />
       </td>
-
-      {/** Created At **/}
       <td className="border px-2 py-1">{new Date(publisher.created_at).toLocaleString()}</td>
-
-      {/** Actions **/}
-      <td className="border px-2 py-1 flex justify-center">
+      <td className="border px-2 py-1 flex justify-center space-x-2">
         <button
           onClick={() => onViewToken(publisher.id)}
+          title="View API Token"
+          disabled={disabled}
           className="text-blue-600 hover:text-blue-800"
         >
-          View Token
+          <FaKey />
+        </button>
+        <button
+          onClick={handleDelete}
+          title="Delete Publisher"
+          disabled={disabled}
+          className="text-red-600 hover:text-red-800"
+        >
+          <FaTrash />
         </button>
       </td>
     </tr>

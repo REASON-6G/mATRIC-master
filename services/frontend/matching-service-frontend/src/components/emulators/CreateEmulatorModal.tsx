@@ -10,6 +10,12 @@ interface Publisher {
   name: string;
 }
 
+interface Topic {
+  id: string;
+  topic: string;
+  description?: string;
+}
+
 interface CreateEmulatorModalProps {
   onClose: () => void;
 }
@@ -18,33 +24,40 @@ export default function CreateEmulatorModal({ onClose }: CreateEmulatorModalProp
   const toast = useToast();
 
   const [name, setName] = useState("");
-  const [topic, setTopic] = useState("");
+  const [topicId, setTopicId] = useState("");
   const [msg_schema, setSchema] = useState("{}");
   const [interval, setInterval] = useState("5");
   const [running, setRunning] = useState(false);
   const [creating, setCreating] = useState(false);
+
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [selectedPublisher, setSelectedPublisher] = useState<string>("");
 
-  // Fetch available publishers for selection
+  const [topics, setTopics] = useState<Topic[]>([]);
+
+  // Fetch available publishers
   useEffect(() => {
     api.get("/api/publishers/")
-      .then(res => {
-        const data = res.data;
-        if (Array.isArray(data)) {
-          setPublishers(data as Publisher[]);
-        } else {
-          console.error("Expected array from /api/publishers, got:", data);
-        }
-      })
+      .then(res => Array.isArray(res.data) && setPublishers(res.data))
       .catch(err => showApiError(toast, err));
-  }, []);
+  }, [toast]);
+
+  // Fetch available topics
+  useEffect(() => {
+    api.get("/api/topics/mine")
+      .then(res => Array.isArray(res.data) && setTopics(res.data))
+      .catch(err => showApiError(toast, err));
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedPublisher) {
       toast.addToast("Please select a publisher", "error");
+      return;
+    }
+    if (!topicId) {
+      toast.addToast("Please select a topic", "error");
       return;
     }
 
@@ -67,7 +80,7 @@ export default function CreateEmulatorModal({ onClose }: CreateEmulatorModalProp
     try {
       await api.post("/api/emulators/", {
         name,
-        topic,
+        topic_id: topicId,
         msg_schema: parsedSchema,
         interval: intervalNumber,
         running,
@@ -84,7 +97,7 @@ export default function CreateEmulatorModal({ onClose }: CreateEmulatorModalProp
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-96 relative transform transition-all duration-300 scale-100 opacity-100">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-96 relative">
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
@@ -116,14 +129,19 @@ export default function CreateEmulatorModal({ onClose }: CreateEmulatorModalProp
             required
           />
 
-          <input
-            type="text"
-            placeholder="Topic"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
+          <select
+            value={topicId}
+            onChange={(e) => setTopicId(e.target.value)}
             className="w-full border rounded px-3 py-2"
             required
-          />
+          >
+            <option value="">Select Topic</option>
+            {topics.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.topic} {t.description ? `- ${t.description}` : ""}
+              </option>
+            ))}
+          </select>
 
           <textarea
             placeholder="Schema (JSON)"

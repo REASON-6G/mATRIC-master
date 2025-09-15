@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import type { AxiosError } from "axios";
+import * as jwt_decode from "jwt-decode";
 import api from "@/lib/api";
 
 export interface User {
@@ -37,29 +38,57 @@ interface RefreshResponse {
   access_token: string;
 }
 
+interface DecodedToken {
+  exp: number; // expiry timestamp
+  [key: string]: any;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // ---- helper: refresh token
+  // ---- helper: refresh access token ----
   const refreshAccessToken = async (): Promise<string> => {
     const refresh_token = localStorage.getItem("refresh_token");
     if (!refresh_token) throw new Error("No refresh token available");
 
-    const res = await api.post<RefreshResponse>("/api/auth/refresh", { refresh_token });
-    const { access_token } = res.data;
+    const res = await api.post<RefreshResponse>(
+      "/api/auth/refresh",
+      {},
+      { headers: { Authorization: `Bearer ${refresh_token}` } }
+    );
 
+    const { access_token } = res.data;
     localStorage.setItem("access_token", access_token);
     api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+    scheduleTokenRefresh(access_token);
     return access_token;
   };
 
-  // ---- axios response interceptor for 401
+  // ---- schedule proactive refresh ----
+  const scheduleTokenRefresh = (token: string) => {
+    try {
+      const decoded = jwt_decode<DecodedToken>(token);
+      const expiresInMs = decoded.exp * 1000 - Date.now();
+      const refreshTime = Math.max(expiresInMs - 10_000, 0); // refresh 10s before expiry
+
+      if (refreshTimeout) clearTimeout(refreshTimeout);
+      const timeout = setTimeout(() => {
+        refreshAccessToken().catch(logout);
+      }, refreshTime);
+      setRefreshTimeout(timeout);
+    } catch {
+      // invalid token, do nothing
+    }
+  };
+
+  // ---- axios response interceptor for 401 ----
   useEffect(() => {
     const interceptor = api.interceptors.response.use(
-      (response) => response,
+      (res) => res,
       async (error: AxiosError) => {
         if (error.response?.status === 401) {
           try {
@@ -78,17 +107,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return Promise.reject(error);
       }
     );
-
-    return () => {
-      api.interceptors.response.eject(interceptor);
-    };
+    return () => api.interceptors.response.eject(interceptor);
   }, []);
 
-  // ---- initial user fetch
+  // ---- initial user fetch ----
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      scheduleTokenRefresh(token);
     }
 
     const fetchUser = async () => {
@@ -110,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
+  // ---- login ----
   const login = async (username: string, password: string) => {
     const res = await api.post<LoginResponse>("/api/auth/login", { username, password });
     const { access_token, refresh_token } = res.data;
@@ -117,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
     api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+    scheduleTokenRefresh(access_token);
 
     const me = await api.get<MeResponse>("/api/auth/me");
     setUser({
@@ -127,22 +156,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // ---- register ----
   const register = async (username: string, email: string, password: string) => {
-    const res = await api.post<MeResponse>("/api/auth/register", { username, email, password });
-    setUser({
-      id: res.data.id,
-      username: res.data.username,
-      email: res.data.email,
-      role: res.data.role as "admin" | "user",
-    });
+    await api.post<MeResponse>("/api/auth/register", { username, email, password });
   };
 
-  const logout = async () => {
-    try {
-      await api.post("/api/auth/logout");
-    } catch {
-      // backend may not implement logout
-    }
+  // ---- logout ----
+  const logout = () => {
+    if (refreshTimeout) clearTimeout(refreshTimeout);
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     delete api.defaults.headers.common["Authorization"];

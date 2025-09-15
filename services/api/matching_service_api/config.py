@@ -17,7 +17,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev")
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev")
-    JWT_ACCESS_TOKEN_EXPIRES = get_int("ACCESS_TOKEN_EXPIRES", 900)
+    JWT_ACCESS_TOKEN_EXPIRES = get_int("ACCESS_TOKEN_EXPIRES", 0.1)
     JWT_REFRESH_TOKEN_EXPIRES = get_int("REFRESH_TOKEN_EXPIRES", 1209600)
 
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://admin:changeme@localhost:27017/matchingservice")

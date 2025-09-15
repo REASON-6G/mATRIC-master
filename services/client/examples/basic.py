@@ -26,7 +26,7 @@ async def main():
         print("Received message:", msg)
 
     # Start background polling
-    client.async_subscribe(queue_name, print_callback)
+    client.async_poll(queue_name, print_callback)
 
     # Keep script running for demonstration
     print("Polling messages for 5 seconds...")

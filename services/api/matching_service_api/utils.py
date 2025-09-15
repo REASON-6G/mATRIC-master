@@ -118,3 +118,8 @@ def load_admin_config():
     doc.pop("_id", None)
     ADMIN_CONFIG_CACHE = doc
 
+
+def is_admin() -> bool:
+    claims = get_jwt()
+    return claims.get("role") == "admin"
+

@@ -2,7 +2,7 @@ export interface Emulator {
   owner_id: string;
   id: string;
   name: string;
-  topic: string;
+  topic_id: string;
   msg_schema: Record<string, any>;
   interval: number;
   running: boolean;

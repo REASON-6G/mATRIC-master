@@ -248,6 +248,11 @@ class MatchingServiceClient:
         resp = await self.client.get(f"{self.base_url}/api/topics/", headers=self._headers())
         await raise_for_status_with_logging(resp)
         return [Topic(**t) for t in resp.json()]
+    
+    async def list_my_topics(self) -> List[Topic]:
+        resp = await self.client.get(f"{self.base_url}/api/topics/mine", headers=self._headers())
+        await raise_for_status_with_logging(resp)
+        return [Topic(**t) for t in resp.json()]
 
     async def get_topic(self, topic_id: str) -> Topic:
         resp = await self.client.get(f"{self.base_url}/api/topics/{topic_id}", headers=self._headers())
@@ -393,7 +398,7 @@ class MatchingServiceClient:
         msg = resp.json()
         return msg.get("message")
 
-    def async_subscribe(
+    def async_poll(
         self,
         queue: str,
         callback: Union[Callable[[dict], None], Callable[[dict], Awaitable[None]]],
@@ -429,7 +434,7 @@ class MatchingServiceClient:
 
     async def create_emulator(self, name: str, topic: str, schema: dict, interval: float) -> Emulator:
         """Create a new emulator"""
-        payload = {"name": name, "topic": topic, "schema": schema, "interval": interval}
+        payload = {"name": name, "topic": topic, "msg_schema": schema, "interval": interval}
         resp = await self.post("/api/emulators/", json=payload)
         return Emulator(**resp.json())
 
@@ -449,7 +454,7 @@ class MatchingServiceClient:
         if topic is not None:
             payload["topic"] = topic
         if schema is not None:
-            payload["schema"] = schema
+            payload["msg_schema"] = schema
         if interval is not None:
             payload["interval"] = interval
 

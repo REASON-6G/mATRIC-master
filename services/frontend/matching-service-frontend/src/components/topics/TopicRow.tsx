@@ -7,7 +7,7 @@ import { showApiError } from "@/lib/showApiError";
 import type { Topic } from "@/types/topic";
 import type { Publisher } from "@/types/publisher";
 import ConfirmModal from "@/components/ConfirmModal";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaCopy } from "react-icons/fa";
 
 interface TopicRowProps {
   topic: Topic;
@@ -145,7 +145,24 @@ export default function TopicRow({ topic, publishers, onRefresh }: TopicRowProps
           />
         </td>
 
-        <td className="border px-2 py-1 text-gray-500">{topicString}</td>
+        <td className="border px-2 py-1 text-gray-500 flex items-center justify-between">
+          <span>{topicString}</span>
+          <button
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(topicString);
+                toast.addToast("Topic copied to clipboard", "success");
+              } catch {
+                toast.addToast("Failed to copy topic", "error");
+              }
+            }}
+            title="Copy topic"
+            className="ml-2 text-gray-400 hover:text-gray-700"
+          >
+            <FaCopy />
+          </button>
+        </td>
+        <td className="border px-2 py-1">{new Date(topic.created_at).toLocaleString()}</td>
 
         <td className="border px-2 py-1 text-center">
           <button
