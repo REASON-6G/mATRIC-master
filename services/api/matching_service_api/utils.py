@@ -1,10 +1,14 @@
+import os
 import logging
 import threading
+import time
 from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt
 from flask import jsonify, current_app
 from functools import wraps
 from influxdb_client import InfluxDBClient
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 from matching_service_api.config import Config
 
 mongo_client = PyMongo()
@@ -88,24 +92,48 @@ DEFAULT_CONFIG = {
 }
 
 
-def initialize_config():
+def initialize_config(retries: int = 10, delay: float = 3.0):
     """
-    Ensure the admin config document exists in MongoDB on startup
+    Ensure the admin config document exists in MongoDB on startup.
+    Waits for MongoDB to be available before initializing.
+    
+    :param retries: Number of times to retry connecting to MongoDB
+    :param delay: Seconds to wait between retries
     """
-    try:
-        # Try to get existing config
-        doc = mongo_client.db.config.find_one({"_id": "admin_config"})
+    mongo_uri = os.getenv(
+        "MONGO_URI",
+        "mongodb://admin:changeme@localhost:27017/matchingservice"
+    )
 
-        if not doc:
-            # Insert default config if missing
-            doc = {"_id": "admin_config", **DEFAULT_CONFIG}
-            mongo_client.db.config.insert_one(doc)
-            logging.info("Admin config initialized with default values.")
-        else:
-            logging.info("Admin config already exists.")
+    for attempt in range(1, retries + 1):
+        try:
+            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+            db = client.get_default_database()
+            
+            # Try a ping to ensure Mongo is ready
+            client.admin.command("ping")
 
-    except Exception as e:
-        logging.exception("Failed to initialize/load admin config: %s", e)
+            # Check if config exists
+            doc = db.config.find_one({"_id": "admin_config"})
+            if not doc:
+                doc = {"_id": "admin_config", **DEFAULT_CONFIG}
+                db.config.insert_one(doc)
+                logging.info("Admin config initialized with default values.")
+            else:
+                logging.info("Admin config already exists.")
+
+            # Success, exit loop
+            return
+
+        except (ServerSelectionTimeoutError, PyMongoError) as e:
+            logging.warning(
+                "MongoDB not ready (attempt %d/%d): %s. Retrying in %.1f seconds...",
+                attempt, retries, e, delay
+            )
+            time.sleep(delay)
+
+    # If we reach here, all attempts failed
+    logging.error("Failed to initialize/load admin config after %d attempts", retries)
 
 
 def load_admin_config():

@@ -1,24 +1,26 @@
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.5.2
     command:
       - --providers.docker=true
-      - --providers.file.filename=/etc/traefik/dynamic.yml
+      - --providers.docker.network=frontend-net
       - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-      - --certificatesresolvers.letsencrypt.acme.email=${LE_EMAIL}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
-      - traefik_letsencrypt:/letsencrypt
+      - --providers.docker.exposedbydefault=false
+      - --log.level=DEBUG
+      - --api.insecure=false
+      - --api.dashboard=true
     labels:
       - traefik.enable=true
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.routers.traefik.rule=Host(`traefik.local`)
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - frontend-net
 
   api:
     build: ./services/api
@@ -29,42 +31,35 @@ services:
       - influxdb
     labels:
       - traefik.enable=true
-      - traefik.http.routers.api.rule=Host(`${API_HOST}`)
-      - traefik.http.routers.api.entrypoints=websecure
-      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.routers.api.rule=Host(`api.local`)
+      - traefik.http.routers.api.entrypoints=web
       - traefik.http.services.api.loadbalancer.server.port=8000
-
-  matcher:
-    build: ./services/matcher
-    env_file: .env
-    depends_on:
-      - mongo
-      - rabbitmq
+    networks:
+      - frontend-net
+      - backend-net
 
   frontend:
-    build: ./services/frontend
+    build:
+      context: ./services/frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${API_URL}
     env_file: .env
+    environment:
+      NEXT_PUBLIC_API_URL: ${API_URL}
     depends_on:
       - api
     labels:
       - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST}`)
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.frontend.rule=Host(`matric.local`)
+      - traefik.http.routers.frontend.entrypoints=web
       - traefik.http.services.frontend.loadbalancer.server.port=3000
-
-  emulators:
-    build: ./services/emulators
-    env_file: .env
-    depends_on:
-      - api
-    deploy:
+    networks:
+      - frontend-net
 
   mongo:
     image: mongo:7
     restart: unless-stopped
-    env_file:
-      - .env
+    env_file: .env
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_INITIAL_DB}
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN_USER}
@@ -73,17 +68,15 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-      - ./ops/mongo-init:/docker-entrypoint-initdb.d:ro
-    labels:
-      - traefik.enable=false
-  
+    networks:
+      - backend-net
+
   mongo-express:
     image: mongo-express:1.0.2
     restart: unless-stopped
     depends_on:
       - mongo
-    env_file:
-      - .env
+    env_file: .env
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ADMIN_USER}
@@ -92,6 +85,8 @@ services:
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASS}
     ports:
       - "8081:8081"
+    networks:
+      - backend-net
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -101,24 +96,26 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend-net
 
   influxdb:
     image: influxdb:2.7
-    env_file: 
-      - .env
+    env_file: .env
     environment:
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USER}
       DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASS}
     ports:
       - "8086:8086"
-    volumes:
-      - influxdb_data:/var/lib/influxdb2
-      - ./ops/influx/setup.sh:/docker-entrypoint-initdb.d/setup.sh:ro
+    networks:
+      - backend-net
 
 volumes:
   mongo_data:
-  rabbitmq_data:
-  influxdb_data:
-  traefik_letsencrypt:
+
+networks:
+  frontend-net:
+    driver: bridge
+    name: frontend-net
+  backend-net:
+    driver: bridge

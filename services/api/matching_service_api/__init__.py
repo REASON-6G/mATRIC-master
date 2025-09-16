@@ -25,8 +25,17 @@ def create_app():
     app.logger.setLevel(logging.INFO)
     CORS(
         app,
-        resources={r"/api/*": {"origins": "*"}},
-        supports_credentials=True)
+        resources={r"/api/*": {"origins": [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://frontend:3000",
+            "http://matric.local"
+        ]}},
+        supports_credentials=True,
+        allow_headers="*",
+        expose_headers="Authorization",
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        )
 
     # init extensions
     jwt_client.init_app(app)
@@ -49,7 +58,7 @@ def create_app():
     # ensure config document exists
     with app.app_context():
         initialize_config()
-        load_admin_config
+        load_admin_config()
 
 
     @app.get("/health")

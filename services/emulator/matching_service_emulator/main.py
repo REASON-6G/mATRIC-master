@@ -12,6 +12,11 @@ from matching_service_client.matching_service_client import MatchingServiceClien
 from pymongo import MongoClient
 
 # -------------------------
+# Logging
+# -------------------------
+logging.basicConfig(level=logging.INFO)
+
+# -------------------------
 # Config
 # -------------------------
 class Config:
@@ -89,6 +94,31 @@ def generate_message(schema: dict) -> dict:
 
     return message
 
+# -------------------------
+# Payload-based Message Generator
+# -------------------------
+def generate_from_example(example: any) -> any:
+    """
+    Recursively generate a message based on an example payload.
+    Numbers are multiplied by a random factor, strings randomized,
+    booleans randomized, lists and dicts handled recursively.
+    """
+    if isinstance(example, dict):
+        return {k: generate_from_example(v) for k, v in example.items()}
+    elif isinstance(example, list):
+        # Random length between 1 and len(example) * 2
+        length = max(1, random.randint(1, len(example) * 2))
+        return [generate_from_example(random.choice(example)) for _ in range(length)]
+    elif isinstance(example, int) or isinstance(example, float):
+        factor = random.uniform(0.5, 1.5)
+        return type(example)(example * factor)
+    elif isinstance(example, str):
+        return fake.word()
+    elif isinstance(example, bool):
+        return random.choice([True, False])
+    else:
+        return example
+
 
 # -------------------------
 # Emulator Task
@@ -132,9 +162,9 @@ async def run_emulator_task(emulator_doc):
 
             interval = emulator_doc.get("interval", 1)
             topic_id = emulator_doc.get("topic_id")
-            schema = emulator_doc.get("msg_schema")
+            msg_schema = emulator_doc.get("msg_schema")
 
-            # Skip iteration if topic or schema missing
+            # Skip iteration if topic or msg_schema missing
             if not topic_id:
                 logger.warning(f"No topic_id set for emulator {emulator_id}, skipping iteration")
                 await asyncio.sleep(interval)
@@ -148,14 +178,14 @@ async def run_emulator_task(emulator_doc):
 
             topic = topic_doc["topic"]
 
-            if not schema:
-                logger.warning(f"No schema set for emulator {emulator_id}, skipping iteration")
+            if not msg_schema:
+                logger.warning(f"No msg_schema set for emulator {emulator_id}, skipping iteration")
                 await asyncio.sleep(interval)
                 continue
 
-            # Generate message using JSON Schema
+            # Generate message from example payload
             try:
-                message = generate_message(schema)
+                message = generate_from_example(msg_schema)
                 if not message:
                     raise ValueError("Generated message is empty")
             except Exception as e:
@@ -186,14 +216,15 @@ async def run_emulator_task(emulator_doc):
 async def emulator_polling_loop():
     while True:
         emulator_docs = list(db.emulators.find({}))
+        logging.info(emulator_docs)
         for doc in emulator_docs:
             eid = str(doc["_id"])
             running_flag = doc.get("running", False)
             topic_id = doc.get("topic_id")
-            schema = doc.get("msg_schema")
+            msg_schema = doc.get("msg_schema")
 
             # Determine if emulator is valid to run
-            is_valid = running_flag and topic_id and schema
+            is_valid = running_flag and topic_id and msg_schema
             if is_valid and eid not in running_emulator_tasks:
                 logging.info("Starting emulator task %s", eid)
                 task = asyncio.create_task(run_emulator_task(doc))
