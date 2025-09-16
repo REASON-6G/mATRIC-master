@@ -5,7 +5,7 @@ from matching_service_client import MatchingServiceClient
 
 async def main():
     print("Logging in")
-    client = MatchingServiceClient("http://localhost:5000")
+    client = MatchingServiceClient("http://api.local")
     print("Logged in")
     await client.login_with_token("WAhNMlvQsQVNsSoP2MwgPbjPmWpTBQdYF1gdQUjPT8Q")
     while True:

@@ -7,16 +7,15 @@ services:
       - --entrypoints.web.address=:80
       - --providers.docker.exposedbydefault=false
       - --log.level=DEBUG
-      - --api.insecure=false
+      - --api.insecure=true
       - --api.dashboard=true
     labels:
       - traefik.enable=true
-      - traefik.http.routers.dashboard.entrypoints=web
-      - traefik.http.routers.dashboard.rule=Host(`traefik.local`)
-      - traefik.http.services.dashboard.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik-dashboard.entrypoints=web
+      - traefik.http.routers.traefik-dashboard.rule=Host(`traefik.local`)
+      - traefik.http.routers.traefik-dashboard.service=api@internal
     ports:
       - "80:80"
-      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
