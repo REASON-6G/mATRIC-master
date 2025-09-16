@@ -1,28 +1,39 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
+import { showApiError } from "@/lib/showApiError";
+import type { Emulator } from "@/types/emulator";
+
 import EmulatorsTable from "@/components/emulators/EmulatorsTable";
 import CreateEmulatorModal from "@/components/emulators/CreateEmulatorModal";
 import { AiOutlinePlus } from "react-icons/ai";
-import api from "@/lib/api";
-import type { Emulator } from "@/types/emulator";
 
-export default function EmulatorsPage() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
+// Core content
+function EmulatorsContent() {
+  const toast = useToast();
   const [emulators, setEmulators] = useState<Emulator[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const fetchEmulators = async () => {
+  const fetchEmulators = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await api.get<Emulator[]>("/api/emulators/");
       setEmulators(res.data);
-    } catch (err) {
-      console.error("Failed to fetch emulators", err);
+    } catch (err: unknown) {
+      showApiError(toast, err);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchEmulators();
-  }, []);
+  }, [fetchEmulators]);
 
   return (
     <div className="p-6 space-y-6">
@@ -44,7 +55,7 @@ export default function EmulatorsPage() {
       </div>
 
       {/* Emulator Table */}
-      <EmulatorsTable emulators={emulators} refresh={fetchEmulators} />
+      <EmulatorsTable emulators={emulators} loading={loading} refresh={fetchEmulators} />
 
       {/* Create Emulator Modal */}
       {showCreateModal && (
@@ -57,4 +68,20 @@ export default function EmulatorsPage() {
       )}
     </div>
   );
+}
+
+export default function EmulatorsPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/"); // redirect unauthenticated users
+    }
+  }, [user, loading, router]);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (!user) return null;
+
+  return <EmulatorsContent />;
 }

@@ -37,9 +37,6 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/tailwind.config.* ./
 COPY --from=builder /app/postcss.config.* ./
 
-# Entrypoint script for runtime env vars
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 3000
-CMD ["./docker-entrypoint.sh"]
+CMD ["npm", "run", "start"]

@@ -7,16 +7,16 @@ import { Inter, Roboto_Mono } from 'next/font/google';
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans', // CSS var for default UI text
+  variable: '--font-sans',
 });
 
 const robotoMono = Roboto_Mono({
   subsets: ['latin'],
-  variable: '--font-mono', // CSS var for code text
+  variable: '--font-mono',
 });
 
 export const metadata = {
-  title: 'Matching Service Dashboard',
+  title: 'mATRIC Dashboard',
   description: 'Admin and monitoring dashboard',
 };
 

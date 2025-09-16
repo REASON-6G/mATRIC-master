@@ -5,10 +5,17 @@ import EmulatorRow from "@/components/emulators/EmulatorRow";
 
 interface EmulatorsTableProps {
   emulators: Emulator[];
+  loading: boolean;
   refresh: () => void;
 }
 
-export default function EmulatorsTable({ emulators, refresh }: EmulatorsTableProps) {
+export default function EmulatorsTable({
+   emulators,
+   loading,
+   refresh,
+}: EmulatorsTableProps) {
+  if (loading) return <div>Loading...</div>;
+  
   return (
     <table className="w-full border">
       <thead>

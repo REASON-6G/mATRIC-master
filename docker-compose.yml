@@ -11,9 +11,9 @@ services:
       - --api.dashboard=true
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik.entrypoints=web
-      - traefik.http.routers.traefik.rule=Host(`traefik.local`)
-      - traefik.http.services.traefik.loadbalancer.server.port=8080
+      - traefik.http.routers.dashboard.entrypoints=web
+      - traefik.http.routers.dashboard.rule=Host(`traefik.local`)
+      - traefik.http.services.dashboard.loadbalancer.server.port=8080
     ports:
       - "80:80"
       - "8080:8080"

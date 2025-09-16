@@ -10,6 +10,9 @@ export default function Home() {
       <div className="p-4 bg-white rounded shadow h-96">
         Map placeholder (Publisher locations)
       </div>
+      <div className="p-4 bg-white rounded shadow h-96">
+        Topics directory
+      </div>
     </div>
   );
 }

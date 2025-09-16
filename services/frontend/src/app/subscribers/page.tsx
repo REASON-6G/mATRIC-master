@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import api from "@/lib/api";
 import { showApiError } from "@/lib/showApiError";
@@ -10,9 +12,9 @@ import SubscribersTable from "@/components/subscribers/SubscribersTable";
 import CreateSubscriberModal from "@/components/subscribers/CreateSubscriberModal";
 import ApiTokenModal from "@/components/subscribers/ApiTokenModal";
 
-export default function SubscribersPage() {
+// Extract the actual content into a separate component
+function SubscribersContent() {
   const toast = useToast();
-
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -61,7 +63,6 @@ export default function SubscribersPage() {
         <CreateSubscriberModal
           onClose={() => setShowCreateModal(false)}
           onCreated={(subscriberId: string) => {
-            // Parent should close create modal and then open the API token modal
             fetchSubscribers();
             setShowCreateModal(false);
             setShowTokenModal({ open: true, subscriberId });
@@ -77,4 +78,20 @@ export default function SubscribersPage() {
       )}
     </div>
   );
+}
+
+export default function SubscribersPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/"); // redirect if not logged in
+    }
+  }, [user, loading, router]);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (!user) return null; // wait for redirect
+
+  return <SubscribersContent />;
 }

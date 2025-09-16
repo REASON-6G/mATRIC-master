@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import api from "@/lib/api";
 import { showApiError } from "@/lib/showApiError";
@@ -10,9 +12,9 @@ import PublishersTable from "@/components/publishers/PublishersTable";
 import CreatePublisherModal from "@/components/publishers/CreatePublisherModal";
 import ApiTokenModal from "@/components/publishers/ApiTokenModal";
 
-export default function PublishersPage() {
+// Extract core content
+function PublishersContent() {
   const toast = useToast();
-
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -62,7 +64,8 @@ export default function PublishersPage() {
           onClose={() => setShowCreateModal(false)}
           onCreated={(publisherId: string) => {
             fetchPublishers();
-            setShowTokenModal({ open: true, publisherId }); // immediately open token modal
+            setShowCreateModal(false);
+            setShowTokenModal({ open: true, publisherId });
           }}
         />
       )}
@@ -75,4 +78,20 @@ export default function PublishersPage() {
       )}
     </div>
   );
+}
+
+export default function PublishersPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/"); // redirect if unauthenticated
+    }
+  }, [user, loading, router]);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (!user) return null; // wait for redirect
+
+  return <PublishersContent />;
 }

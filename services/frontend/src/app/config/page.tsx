@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import api from "@/lib/api";
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/api';
 
 interface ConfigItem {
   key: string;
@@ -9,39 +11,39 @@ interface ConfigItem {
   [propName: string]: unknown;
 }
 
-interface AdminConfigPageProps {
-  accessToken: string;
-}
-
-export default function AdminConfigPage({ accessToken }: AdminConfigPageProps) {
+function ConfigContent() {
+  const { user } = useAuth();
   const [configs, setConfigs] = useState<ConfigItem[]>([]);
   const [editedKeys, setEditedKeys] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
 
-  // Load config on mount
+  const fetchConfigs = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const resp = await api.get<ConfigItem[]>('/api/admin/config', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const dataArray: ConfigItem[] = Array.isArray(resp.data)
+        ? resp.data
+        : Object.entries(resp.data).map(([key, value]) => ({ key, value }));
+
+      setConfigs(dataArray);
+    } catch (err) {
+      console.error('Error loading config:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const resp = await api.get<ConfigItem[]>('/api/admin/config', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-
-        // Convert returned object into array if backend returns { key1: val1, key2: val2 }
-        const dataArray: ConfigItem[] = Array.isArray(resp.data)
-          ? resp.data
-          : Object.entries(resp.data).map(([key, value]) => ({ key, value }));
-
-        setConfigs(dataArray);
-      } catch (err) {
-        console.error('Error loading config:', err);
-      }
-    };
-    load();
-  }, [accessToken]);
+    fetchConfigs();
+  }, [fetchConfigs]);
 
   const handleChange = (key: string, field: string, value: unknown) => {
-    setConfigs(prev =>
-      prev.map(c => (c.key === key ? { ...c, [field]: value } : c))
-    );
+    setConfigs(prev => prev.map(c => (c.key === key ? { ...c, [field]: value } : c)));
     setEditedKeys(prev => new Set(prev).add(key));
   };
 
@@ -50,27 +52,26 @@ export default function AdminConfigPage({ accessToken }: AdminConfigPageProps) {
     if (!item) return;
 
     try {
+      const token = localStorage.getItem('access_token');
       const resp = await api.put<ConfigItem>(
         '/api/admin/config',
         item,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setConfigs(prev =>
-        prev.map(c => (c.key === key ? resp.data : c))
-      );
-
+      setConfigs(prev => prev.map(c => (c.key === key ? resp.data : c)));
       setEditedKeys(prev => {
         const newSet = new Set(prev);
         newSet.delete(key);
         return newSet;
       });
-
       console.log(`Saved config for key ${key}`);
     } catch (err) {
       console.error('Error saving config:', err);
     }
   };
+
+  if (loading) return <div className="p-4">Loading configuration...</div>;
 
   return (
     <div className="p-4">
@@ -89,10 +90,10 @@ export default function AdminConfigPage({ accessToken }: AdminConfigPageProps) {
               <td className="border border-gray-300 p-2">{key}</td>
               <td className="border border-gray-300 p-2">
                 <input
-                    type="text"
-                    value={String(value ?? '')}
-                    onChange={e => handleChange(key, "value", e.target.value)}
-                    className="border rounded p-1 w-full"
+                  type="text"
+                  value={String(value ?? '')}
+                  onChange={e => handleChange(key, 'value', e.target.value)}
+                  className="border rounded p-1 w-full"
                 />
               </td>
               <td className="border border-gray-300 p-2 text-center">
@@ -114,4 +115,22 @@ export default function AdminConfigPage({ accessToken }: AdminConfigPageProps) {
       </table>
     </div>
   );
+}
+
+export default function ConfigPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.role !== 'admin') {
+        router.replace('/'); // redirect non-admins
+      }
+    }
+  }, [user, loading, router]);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (!user || user.role !== 'admin') return null;
+
+  return <ConfigContent />;
 }
