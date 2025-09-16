@@ -37,6 +37,12 @@ services:
     networks:
       - frontend-net
       - backend-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
 
   frontend:
     build:
@@ -109,6 +115,41 @@ services:
       - "8086:8086"
     networks:
       - backend-net
+
+  emulator:
+    build: 
+      context: .
+      dockerfile: ./services/emulator/Dockerfile
+    env_file: .env
+    depends_on:
+      - api
+    networks:
+      - backend-net
+    ports:
+      - "6000:6000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+
+  matcher:
+    build: ./services/matcher
+    env_file: .env
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - backend-net
+    ports:
+      - "7000:7000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
 
 volumes:
   mongo_data:

@@ -2,8 +2,9 @@
 import asyncio
 import fnmatch
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import aio_pika
+from quart import Quart
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from bson import ObjectId
@@ -123,14 +124,58 @@ async def ensure_queues():
 
     await connection.close()
 
+# -------------------
+# Health endpoint
+# -------------------
+health_app = Quart(__name__)
 
+@health_app.route("/health", methods=["GET"])
+async def health():
+    """
+    Returns health status of the matcher service.
+    Includes DB and in-memory stats.
+    """
+    try:
+        # MongoDB status
+        total_topics = await asyncio.to_thread(lambda: db.topics.count_documents({}))
+        total_subs = await asyncio.to_thread(lambda: db.subscriptions.count_documents({}))
+
+        # Running asyncio tasks
+        running_tasks = len(asyncio.all_tasks())  # optional: track main_loop task separately
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            "topics_total": total_topics,
+            "subscriptions_total": total_subs,
+            "running_asyncio_tasks": running_tasks,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }, 500
 # -------------------
 # Main Loop
 # -------------------
-async def main_loop():
+async def matcher_loop():
     while True:
         await ensure_queues()
         await asyncio.sleep(POLL_INTERVAL)
+
+
+async def run_all():
+    # Start matcher main loop
+    matcher_task = asyncio.create_task(matcher_loop())
+
+    # Start Quart health app
+    import hypercorn.asyncio
+    import hypercorn.config
+
+    config = hypercorn.config.Config()
+    config.bind = ["0.0.0.0:7000"]
+    await hypercorn.asyncio.serve(health_app, config)
 
 
 # -------------------
@@ -139,7 +184,7 @@ async def main_loop():
 def main():
     try:
         logger.info("Starting matcher service...")
-        asyncio.run(main_loop())
+        asyncio.run(run_all())
     except KeyboardInterrupt:
         logger.info("Matcher service stopped manually")
     except Exception as e:

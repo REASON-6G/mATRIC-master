@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from bson import ObjectId
 from faker import Faker
@@ -209,6 +209,27 @@ async def run_emulator_task(emulator_doc):
             handler.close()
             logger.removeHandler(handler)
         running_emulator_tasks.pop(emulator_id, None)
+
+
+# -------------------------
+# Health Endpoint
+# -------------------------
+@app.route("/health", methods=["GET"])
+async def health():
+    """
+    Simple health check endpoint.
+    Returns 200 OK with some status info.
+    """
+    # Count running emulators
+    running_count = len(running_emulator_tasks)
+    total_count = db.emulators.count_documents({})
+
+    return {
+        "status": "ok",
+        "emulators_total": total_count,
+        "emulators_running": running_count,
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+    }
 
 # -------------------------
 # Polling Loop
