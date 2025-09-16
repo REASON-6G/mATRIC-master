@@ -1,10 +1,10 @@
 // Create the database
-db = db.getSiblingDB("matchingservice");  // Replace with your DB name
+db = db.getSiblingDB("matchingservice");
 
 // Create a default admin user
 db.createUser({
   user: "admin",
-  pwd: "changeme",          // Change this in production!
+  pwd: "changeme",
   roles: [{ role: "readWrite", db: "matchingservice" }]
 });
 
@@ -19,7 +19,7 @@ db.createCollection("subscriptions");
 db.subscriptions.createIndex({ user_id: 1 });
 
 db.createCollection("publishers");
-db.publishers.createIndex({ "location": "2dsphere" }); // For geo queries
+db.publishers.createIndex({ "location": "2dsphere" });
 
 db.createCollection("metrics");
 db.metrics.createIndex({ topic: 1 });
