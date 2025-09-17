@@ -1,8 +1,6 @@
-.vscode
-*.pyc
-/venv
-frontend/.env
-/frontend/coverage
-/.idea
 .env
+*.pyc
+__pycache__/
 .idea
+*.egg-info
+*.log

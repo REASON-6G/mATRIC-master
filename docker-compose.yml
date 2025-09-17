@@ -1,258 +1,162 @@
 services:
-  influxdb:
-    image: influxdb:2
-    restart: always
+  traefik:
+    image: traefik:v3.5.2
+    command:
+      - --providers.docker=true
+      - --providers.docker.network=frontend-net
+      - --entrypoints.web.address=:80
+      - --providers.docker.exposedbydefault=false
+      - --log.level=DEBUG
+      - --api.insecure=true
+      - --api.dashboard=true
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik-dashboard.entrypoints=web
+      - traefik.http.routers.traefik-dashboard.rule=Host(`traefik.local`)
+      - traefik.http.routers.traefik-dashboard.service=api@internal
     ports:
-      - "8086:8086"
+      - "80:80"
     volumes:
-      - app-influxdb-data:/var/lib/influxdb
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD?Variable not set}
-      - DOCKER_INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
-      - DOCKER_INFLUXDB_INIT_ORG="University of Bristol"
-      - DOCKER_INFLUXDB_INIT_BUCKET=matric
-      - DOCKER_INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - frontend-net
 
-  db:
-    image: postgres:12
-    restart: always
-    volumes:
-      - app-postgres-data:/var/lib/postgresql/data/pgdata
-    env_file:
-      - .env
-    environment:
-      - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - POSTGRES_USER=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_DB=${POSTGRES_NAME?Variable not set}
-
-  adminer:
-    image: adminer
-    restart: always
+  api:
+    build: ./services/api
+    env_file: .env
     depends_on:
-      - db
-    environment:
-      - ADMINER_DESIGN=pepa-linha-dark
-
-  backend:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    restart: always
-    depends_on:
-      - db
-      - mq
-    env_file:
-      - .env
-    environment:
-      - DOMAIN=${DOMAIN}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
-      - SECRET_KEY=${SECRET_KEY?Variable not set}
-      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
-      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
-      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
-      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
-      - SENTRY_DSN=${SENTRY_DSN}
-    ports:
-      - "8888:80"
-    build:
-      context: ./backend
-      args:
-        INSTALL_DEV: ${INSTALL_DEV-false}
-    platform: linux/amd64 # Patch for M1 Mac
+      - mongo
+      - rabbitmq
+      - influxdb
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`api.local`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.services.api.loadbalancer.server.port=8000
+    networks:
+      - frontend-net
+      - backend-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
 
   frontend:
-    image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
-    restart: always
     build:
-      context: ./frontend
+      context: ./services/frontend
       args:
-        - VITE_API_URL=https://${DOMAIN?Variable not set}
-        - NODE_ENV=production
-
-  mq:
-    image: rabbitmq:3-management
-    restart: always
-    env_file:
-      - .env
+        NEXT_PUBLIC_API_URL: ${API_URL}
+    env_file: .env
     environment:
-      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
-      - RABBITMQ_HEARTBEAT=0
-
-  agent:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    restart: always
-    command: python app/rabbitmq/subscriber_agent_update.py
+      NEXT_PUBLIC_API_URL: ${API_URL}
     depends_on:
-      - db
-      - mq
-    env_file:
-      - .env
-    environment:
-      - DOMAIN=${DOMAIN}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
-      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
-      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
-      - SECRET_KEY=${SECRET_KEY?Variable not set}
-      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
-      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
-      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
-      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
-      - SENTRY_DSN=${SENTRY_DSN}
+      - api
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`matric.local`)
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.services.frontend.loadbalancer.server.port=3000
+    networks:
+      - frontend-net
 
-  agent_command:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    restart: always
-    command: python app/rabbitmq/subscriber_agent_command.py
-    depends_on:
-      - db
-      - mq
-    env_file:
-      - .env
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    env_file: .env
     environment:
-      - DOMAIN=${DOMAIN}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
-      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
-      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
-      - SECRET_KEY=${SECRET_KEY?Variable not set}
-      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
-      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
-      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
-      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
-      - SENTRY_DSN=${SENTRY_DSN}
+      MONGO_INITDB_DATABASE: ${MONGO_INITIAL_DB}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADMIN_PASS}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./ops/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - backend-net
 
-  agent_data:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    restart: always
-    command: python app/rabbitmq/subscriber_agent_data.py
+  mongo-express:
+    image: mongo-express:1.0.2
+    restart: unless-stopped
     depends_on:
-      - db
-      - mq
-    env_file:
-      - .env
+      - mongo
+    env_file: .env
     environment:
-      - DOMAIN=${DOMAIN}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
-      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
-      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
-      - SECRET_KEY=${SECRET_KEY?Variable not set}
-      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
-      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
-      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
-      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
-      - SENTRY_DSN=${SENTRY_DSN}
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ADMIN_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ADMIN_PASS}
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASS}
+    ports:
+      - "8081:8081"
+    networks:
+      - backend-net
 
-  agent_details:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
-    restart: always
-    command: python app/rabbitmq/subscriber_agent_details.py
-    depends_on:
-      - db
-      - mq
-    env_file:
-      - .env
+  rabbitmq:
+    image: rabbitmq:3.13-management
     environment:
-      - DOMAIN=${DOMAIN}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN?Variable not set}
-      - INFLUXDB_URL=${INFLUXDB_URL?Variable not set}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET?Variable not set}
-      - INFLUXDB_ORG=${INFLUXDB_ORG?Variable not set}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
-      - SECRET_KEY=${SECRET_KEY?Variable not set}
-      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
-      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
-      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
-      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE?Variable not set}
-      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
-      - SENTRY_DSN=${SENTRY_DSN}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - backend-net
+
+  influxdb:
+    image: influxdb:2.7
+    env_file: .env
+    environment:
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USER}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASS}
+    ports:
+      - "8086:8086"
+    networks:
+      - backend-net
+
+  emulator:
+    build: 
+      context: .
+      dockerfile: ./services/emulator/Dockerfile
+    env_file: .env
+    depends_on:
+      - api
+    networks:
+      - backend-net
+    ports:
+      - "6000:6000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+
+  matcher:
+    build: ./services/matcher
+    env_file: .env
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - backend-net
+    ports:
+      - "7000:7000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/health"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
 
 volumes:
-  app-postgres-data:
-  app-influxdb-data:
+  mongo_data:
+
+networks:
+  frontend-net:
+    driver: bridge
+    name: frontend-net
+  backend-net:
+    driver: bridge
