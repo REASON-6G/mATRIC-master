@@ -39,8 +39,10 @@ services:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
     depends_on:
-      - db
-      - mq
+      db:
+        condition: service_started
+      mq:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -94,17 +96,21 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
       - RABBITMQ_HEARTBEAT=0
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
 
   agent:
-     
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
-  
     command: python app/rabbitmq/subscriber_agent_update.py
-    
     depends_on:
-      - db
-      - mq
+      db:
+        condition: service_started
+      mq:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -142,8 +148,10 @@ services:
     restart: always
     command: python app/rabbitmq/subscriber_agent_command.py
     depends_on:
-      - db
-      - mq
+      db:
+        condition: service_started
+      mq:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -181,8 +189,10 @@ services:
     restart: always
     command: python app/rabbitmq/subscriber_agent_data.py
     depends_on:
-      - db
-      - mq
+      db:
+        condition: service_started
+      mq:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -220,8 +230,10 @@ services:
     restart: always
     command: python app/rabbitmq/subscriber_agent_details.py
     depends_on:
-      - db
-      - mq
+      db:
+        condition: service_started
+      mq:
+        condition: service_healthy
     env_file:
       - .env
     environment:
