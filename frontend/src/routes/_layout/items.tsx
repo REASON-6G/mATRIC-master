@@ -1,144 +1,132 @@
-import { z } from "zod"
-import {
-  Button,
-  Container,
-  Flex,
-  Heading,
-  Skeleton,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+// frontend/src/routes/_layout/items.tsx
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { useEffect } from "react"
-import { ItemsService } from "../../client"
-import ActionsMenu from "../../components/Common/ActionsMenu"
-import Navbar from "../../components/Common/Navbar"
+type NavItem = {
+  label: string;
+  href?: string;
+  children?: NavItem[];
+};
 
-const itemsSearchSchema = z.object({
-  page: z.number().catch(1),
-})
+const NAV_ITEMS: NavItem[] = [
+  { label: "Dashboard", href: "/" },
+  { label: "Agents", href: "/agents" },
+  {
+    label: "Metrics",
+    children: [
+      { label: "Live", href: "/metrics/live" },
+      { label: "History", href: "/metrics/history" },
+    ],
+  },
+];
 
-export const Route = createFileRoute("/_layout/items")({
-  component: Items,
-  validateSearch: (search) => itemsSearchSchema.parse(search),
-})
+function LayoutItems(): JSX.Element {
+  const [open, setOpen] = useState<boolean>(false);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-const PER_PAGE = 5
-
-function getItemsQueryOptions({ page }: { page: number }) {
-  return {
-    queryFn: () =>
-      ItemsService.readItems({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
-    queryKey: ["items", { page }],
-  }
-}
-
-function ItemsTable() {
-  const queryClient = useQueryClient()
-  const { page } = Route.useSearch()
-  const navigate = useNavigate({ from: Route.fullPath })
-  const setPage = (page: number) =>
-    navigate({ search: (prev) => ({ ...prev, page }) })
-
-  const {
-    data: items,
-    isPending,
-    isPlaceholderData,
-  } = useQuery({
-    ...getItemsQueryOptions({ page }),
-    placeholderData: (prevData) => prevData,
-  })
-
-  const hasNextPage = !isPlaceholderData && items?.data.length === PER_PAGE
-  const hasPreviousPage = page > 1
-
-  useEffect(() => {
-    if (hasNextPage) {
-      queryClient.prefetchQuery(getItemsQueryOptions({ page: page + 1 }))
-    }
-  }, [page, queryClient])
+  const toggleMain = () => setOpen((prev: boolean) => !prev);
+  const toggleGroup = (idx: number) =>
+    setOpenIndex((prev: number | null) => (prev === idx ? null : idx));
 
   return (
-    <>
-      <TableContainer>
-        <Table size={{ base: "sm", md: "md" }}>
-          <Thead>
-            <Tr>
-              <Th>ID</Th>
-              <Th>Title</Th>
-              <Th>Description</Th>
-              <Th>Location</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          {isPending ? (
-            <Tbody>
-              {new Array(5).fill(null).map((_, index) => (
-                <Tr key={index}>
-                  {new Array(4).fill(null).map((_, index) => (
-                    <Td key={index}>
-                      <Flex>
-                        <Skeleton height="20px" width="20px" />
-                      </Flex>
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          ) : (
-            <Tbody>
-              {items?.data.map((item) => (
-                <Tr key={item.id} opacity={isPlaceholderData ? 0.5 : 1}>
-                  <Td>{item.id}</Td>
-                  <Td>{item.title}</Td>
-                  <Td color={!item.description ? "ui.dim" : "inherit"}>
-                    {item.description || "N/A"}
-                  </Td>
-                  <Td>{item.data}</Td>
-                  <Td>
-                    <ActionsMenu type={"Item"} value={item} />
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          )}
-        </Table>
-      </TableContainer>
-      <Flex
-        gap={4}
-        alignItems="center"
-        mt={4}
-        direction="row"
-        justifyContent="flex-end"
+    <nav style={{ display: "grid", gap: 8 }}>
+      <button
+        onClick={toggleMain}
+        style={{
+          padding: 8,
+          borderRadius: 8,
+          border: "1px solid #e5e5e5",
+          textAlign: "left",
+        }}
       >
-        <Button onClick={() => setPage(page - 1)} isDisabled={!hasPreviousPage}>
-          Previous
-        </Button>
-        <span>Page {page}</span>
-        <Button isDisabled={!hasNextPage} onClick={() => setPage(page + 1)}>
-          Next
-        </Button>
-      </Flex>
-    </>
-  )
+        {open ? "Hide menu" : "Show menu"}
+      </button>
+
+      {open && (
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
+          {NAV_ITEMS.map((item, idx) => {
+            const hasChildren = !!item.children?.length;
+            const isOpen = openIndex === idx;
+
+            return (
+              <li key={item.label}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: "1px solid #efefef",
+                    background: "#fff",
+                  }}
+                >
+                  {item.href ? (
+                    <a href={item.href} style={{ textDecoration: "none", color: "inherit" }}>
+                      {item.label}
+                    </a>
+                  ) : (
+                    <span>{item.label}</span>
+                  )}
+
+                  {hasChildren && (
+                    <button
+                      onClick={() => toggleGroup(idx)}
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 6,
+                        border: "1px solid #e5e5e5",
+                        background: isOpen ? "#f6f6f6" : "#fff",
+                      }}
+                    >
+                      {isOpen ? "−" : "+"}
+                    </button>
+                  )}
+                </div>
+
+                {hasChildren && isOpen && (
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      margin: "6px 0 0 16px",
+                      padding: 0,
+                      display: "grid",
+                      gap: 6,
+                    }}
+                  >
+                    {item.children!.map((c) => (
+                      <li key={c.label}>
+                        <a
+                          href={c.href}
+                          style={{
+                            display: "block",
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            border: "1px solid #f0f0f0",
+                            textDecoration: "none",
+                            color: "inherit",
+                            background: "#fff",
+                          }}
+                        >
+                          {c.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </nav>
+  );
 }
 
-function Items() {
-  return (
-    <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Access Point Management
-      </Heading>
+// ✅ Correct file route key for this file:
+export const Route = createFileRoute("/_layout/items")({
+  component: LayoutItems,
+});
 
-      <Navbar type={"Access Point"} />
-      <ItemsTable />
-    </Container>
-  )
-}
+export default LayoutItems;

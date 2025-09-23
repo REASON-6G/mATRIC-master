@@ -22,6 +22,7 @@ class User(Base):
     def __repr__(self):
         return f"<User(username={self.username}, roles={self.roles})>"
 
+
 class Agents(Base):
     __tablename__ = "agents"
 
@@ -34,6 +35,7 @@ class Agents(Base):
 
     def __repr__(self):
         return f"<Agent(ap_id={self.ap_id}, onboard={self.onboard})>"
+
 
 class ThirdPartyApps(Base):
     __tablename__ = "third_party_apps"
@@ -48,7 +50,6 @@ class ThirdPartyApps(Base):
 
 
 # Command Model
-
 class AgentCommand(Base):
     __tablename__ = "commands"
 
@@ -59,16 +60,16 @@ class AgentCommand(Base):
     status = Column(String, nullable=False, default="pending")  # Tracks the command status (pending, completed, etc.)
     agent = relationship("Agents", back_populates="commands")
 
-
     def __repr__(self):
         return f"<Command(agent_id={self.agent_id}, command={self.command}, timestamp={self.timestamp})>"
 
-   
+
 # Pydantic Models
 class UserCreate(BaseModel):
     username: EmailStr
     password: str
     roles: List[str]
+
 
 class UserUpdate(BaseModel):
     password: Optional[str] = None
@@ -80,14 +81,17 @@ class AgentCreate(BaseModel):
     password: str
     configuration: dict
 
+
 class AgentConfiguration(BaseModel):
     ap_id: str
     configuration: dict
     supported_commands: Optional[List[str]] = None
 
+
 class AgentUpdate(BaseModel):
     password: Optional[str] = None
     configuration: Optional[dict] = None
+
 
 class Agent(BaseModel):
     id: uuid.UUID
@@ -103,9 +107,11 @@ class ThirdPartyAppCreate(BaseModel):
     api_key: str
     permissions: dict
 
+
 class ThirdPartyAppUpdate(BaseModel):
     api_key: Optional[str] = None
     permissions: Optional[dict] = None
+
 
 class ThirdPartyApp(BaseModel):
     id: uuid.UUID
@@ -122,6 +128,7 @@ class Token(BaseModel):
     token_type: str
     expires_in: int
 
+
 class TokenData(BaseModel):
     username: Optional[str] = None
     roles: str
@@ -129,6 +136,7 @@ class TokenData(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class AgentTokenData(BaseModel):
     ap_id: str
@@ -173,3 +181,21 @@ class MultiEmulatorRequest(BaseModel):
 # Add the class configuration for Pydantic models to support ORMs
 for model in [UserCreate, UserUpdate, AgentCreate, AgentUpdate, ThirdPartyAppCreate, ThirdPartyAppUpdate]:
     model.Config = type('Config', (), {"orm_mode": True})
+
+
+class AgentSummary(BaseModel):
+    """Minimal identity for an agent used by the visualisation endpoints."""
+    id: str
+    name: Optional[str] = None
+
+
+class AgentPoint(BaseModel):
+    """Single time-value tuple for charting."""
+    ts: str  # ISO-8601 timestamp
+    value: float
+
+
+class AgentSeries(BaseModel):
+    """Time series for a single agent."""
+    agent_id: str
+    points: List[AgentPoint] = []
