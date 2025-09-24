@@ -11,10 +11,10 @@ import {
   CartesianGrid,
 } from "recharts";
 import { createFileRoute } from "@tanstack/react-router";
-import { API_BASE, getToken } from "../../lib/auth"; // <— centralised auth
+import { API_BASE, getToken } from "../../lib/auth";
 
-type AgentRow = { id: string; ap_id: string; configuration: Record<string, unknown>; onboard: boolean; };
-type AgentPoint = { ts: string; value: number; key?: string | null; };
+type AgentRow = { id: string; ap_id: string; configuration: Record<string, unknown>; onboard: boolean };
+type AgentPoint = { ts: string; value: number; key?: string | null };
 type AgentSeries = { agent_id: string; points: AgentPoint[] };
 
 async function apiGet<T>(path: string): Promise<T> {
@@ -122,9 +122,11 @@ function DashboardIndex(): JSX.Element {
   const prepared = useMemo(() => prepareChart(series), [series]);
   const tokenMissing = !getToken();
 
+  const CHART_HEIGHT = 520;
+
   return (
     <div style={{ display: "grid", gap: 16, padding: 16 }}>
-      <h2 style={{ margin: 0 }}>Dashboard</h2>
+      <h2 style={{ margin: 0 }}>Metrics</h2>
 
       {tokenMissing && (
         <div style={{ color: "crimson" }}>
@@ -166,13 +168,13 @@ function DashboardIndex(): JSX.Element {
 
       {err && <div style={{ color: "crimson" }}>{err}</div>}
 
-      <div style={{ width: "100%", height: 380, border: "1px solid #eee", borderRadius: 12, padding: 8 }}>
+      <div style={{ width: "100%", height: CHART_HEIGHT, border: "1px solid #eee", borderRadius: 12, padding: 8 }}>
         {loadingSeries ? (
           <div style={{ padding: 12 }}>Loading chart…</div>
         ) : prepared.rows.length === 0 ? (
           <div style={{ padding: 12 }}>No data in this window.</div>
         ) : (
-          <ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={prepared.rows} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="t" type="number" domain={["auto", "auto"]} tickFormatter={(t: number) => new Date(t).toLocaleTimeString()} />
@@ -190,7 +192,7 @@ function DashboardIndex(): JSX.Element {
   );
 }
 
-// keep this exact key for the index route under /_layout
-export const Route = createFileRoute("/_layout/")({
+// Index route under the root layout (no "/_layout/" in the key)
+export const Route = createFileRoute("/")({
   component: DashboardIndex,
 });

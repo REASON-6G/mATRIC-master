@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "lint": "biome check --apply-unsafe --no-errors-on-unmatched --files-ignore-unknown=true ./",
     "preview": "vite preview",
     "generate-client": "openapi-ts --input ./openapi.json --output ./src/client --client axios --exportSchemas true && biome format --write ./src/client",
@@ -72,6 +72,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.1",
-    "vite": "^5.0.13"
+    "vite": "^5.0.13",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }

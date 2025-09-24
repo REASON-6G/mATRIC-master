@@ -20,7 +20,7 @@ import { Route as DocumentationImport } from './routes/documentation'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
-import { Route as LayoutItemsImport } from './routes/_layout/items'
+import { Route as LayoutAccessPointsImport } from './routes/_layout/access-points'
 import { Route as LayoutEmulatorImport } from './routes/_layout/emulator'
 import { Route as LayoutDocsImport } from './routes/_layout/docs'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
@@ -72,8 +72,8 @@ const LayoutSettingsRoute = LayoutSettingsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutItemsRoute = LayoutItemsImport.update({
-  path: '/items',
+const LayoutAccessPointsRoute = LayoutAccessPointsImport.update({
+  path: '/access-points',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -136,8 +136,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutEmulatorImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/items': {
-      preLoaderRoute: typeof LayoutItemsImport
+    '/_layout/access-points': {
+      preLoaderRoute: typeof LayoutAccessPointsImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/settings': {
@@ -158,7 +158,7 @@ export const routeTree = rootRoute.addChildren([
     LayoutAdminRoute,
     LayoutDocsRoute,
     LayoutEmulatorRoute,
-    LayoutItemsRoute,
+    LayoutAccessPointsRoute,
     LayoutSettingsRoute,
     LayoutIndexRoute,
   ]),
