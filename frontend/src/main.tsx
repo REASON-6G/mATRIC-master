@@ -1,3 +1,4 @@
+// frontend/src/main.tsx
 import "./token-persist";
 import { ChakraProvider } from "@chakra-ui/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
