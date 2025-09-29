@@ -1,11 +1,11 @@
 ---
-# Launch LiFi emulators per agent with `timeout`.
-# Same variable contract as 5G/WiFi.
+# Launch LiFi emulators per agent; identical contract to 5G/WiFi.
 
 - hosts: localhost
+  connection: local
   gather_facts: false
   vars:
-    emulator_script: "/app/app/emulators/lifi_emulator.py"
+    emulator_script: "/app/app/emulators/lifi/emulate-lifi.py"
     log_dir: "/var/log/emulators"
 
   tasks:
@@ -22,22 +22,40 @@
           agents: "{{ agents | map(attribute='ap_id') | list }}"
           num_devices: "{{ num_devices }}"
           duration_minutes: "{{ duration }}"
+          emulator_script: "{{ emulator_script }}"
 
-    - name: Launch LiFi emulator per agent (detached, duration-capped)
-      ansible.builtin.shell: >
-        set -euo pipefail;
-        dur_sec=$(( {{ duration | int }} * 60 ));
-        log="{{ log_dir }}/{{ item.ap_id }}.log";
-        export EMU_PASSWORD="{{ item.password }}";
-        nohup timeout "${dur_sec}s" python3 {{ emulator_script }}
-          --ap-id "{{ item.ap_id }}"
-          --devices "{{ num_devices }}"
-          --lat "{{ item.location.lat }}"
-          --lon "{{ item.location.lon }}"
-          --duration-minutes "{{ duration | int }}"
-          >> "$log" 2>&1 < /dev/null & disown
-      args:
-        executable: /bin/bash
+    - name: Check emulator script exists
+      ansible.builtin.stat:
+        path: "{{ emulator_script }}"
+      register: emu_script_stat
+
+    - name: Abort if emulator script missing
+      ansible.builtin.fail:
+        msg: "Emulator script not found at {{ emulator_script }}. Fix the path or copy the file into the container."
+      when: not emu_script_stat.stat.exists
+
+    # Run per agent; cap lifetime; log to file
+    - name: Launch LiFi emulator per agent (async, duration-capped, log to file)
+      ansible.builtin.shell: |
+        set -o pipefail
+        /usr/bin/timeout {{ (duration | int) * 60 }}s \
+          /usr/bin/python3 {{ emulator_script }} \
+            --ap-id {{ item.ap_id }} \
+            --password {{ item.password }} \
+            --devices {{ num_devices }} \
+            --lat {{ item.location.lat }} \
+            --lon {{ item.location.lon }} \
+            --duration-minutes {{ duration | int }} \
+            --token-url http://backend/api/v1/token/?login_type=agent \
+            --post-url  http://backend/api/v1/agent_update/update \
+          > {{ log_dir }}/{{ item.ap_id }}.log 2>&1
+      async: "{{ ((duration | int) * 60) + 60 }}"
+      poll: 0
       loop: "{{ agents }}"
       loop_control:
         label: "{{ item.ap_id }}"
+      register: async_jobs
+
+    - name: Note PIDs/async job ids (for debugging)
+      ansible.builtin.debug:
+        var: async_jobs
