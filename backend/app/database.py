@@ -7,14 +7,16 @@ from .config import settings
 from .models import User as UserModel, UserCreate, UserUpdate
 from .models import Agents as AgentModel
 from .models import ThirdPartyApps as ThirdPartyAppModel
-#from .database_session import SessionLocal, Base
+# from .database_session import SessionLocal, Base
 from app.models import AgentCommand  # For conflict resolution
-from datetime import datetime
+from datetime import datetime, timezone
 from .dependencies import get_db
+from typing import Iterable, Union, List, Dict, Any
 
 
 def get_db_manager(db: Session = Depends(get_db)):
     return DatabaseManager(db)
+
 
 class DatabaseManager:
     def __init__(self, db: Session):
@@ -129,16 +131,17 @@ class DatabaseManager:
     def get_all_third_party_apps(self):
         return self.db.query(ThirdPartyAppModel).all()
 
-
     # Conflict resolution operations (new)
     def get_last_command_for_agent(self, agent_id: str):
         """
         Retrieves the last command sent to a specific agent from the database.
         """
-        return self.db.query(AgentCommand)\
-            .filter(AgentCommand.agent_id == agent_id)\
-            .order_by(AgentCommand.timestamp.desc())\
+        return (
+            self.db.query(AgentCommand)
+            .filter(AgentCommand.agent_id == agent_id)
+            .order_by(AgentCommand.timestamp.desc())
             .first()
+        )
 
     def save_command_for_agent(self, agent_id: str, command: str):
         """
@@ -154,3 +157,44 @@ class DatabaseManager:
         self.db.add(new_command)
         print("after db add")
         self.db.commit()
+
+
+def mark_agents_started(agents_or_ap_ids: Iterable[Union[str, Dict[str, Any]]]) -> int:
+    """
+    Stamp emulator_started_at = now() (UTC) for the given agents.
+
+    Accepts either:
+      - iterable of ap_id strings, OR
+      - iterable of dicts like {'ap_id': 'Emu-XYZ-1234', ...}
+
+    Returns: count of agents updated.
+    """
+    # Collect ap_ids
+    ap_ids: List[str] = []
+    for item in agents_or_ap_ids or []:
+        if isinstance(item, str):
+            ap_ids.append(item)
+        elif isinstance(item, dict):
+            ap_id = item.get("ap_id")
+            if ap_id:
+                ap_ids.append(ap_id)
+
+    ap_ids = list({a for a in ap_ids if a})  # dedupe & drop falsy
+    if not ap_ids:
+        return 0
+
+    # Use a short lived session from get_db()
+    db_gen = get_db()
+    db: Session = next(db_gen)
+    try:
+        now = datetime.now(timezone.utc)
+        q = db.query(AgentModel).filter(AgentModel.ap_id.in_(ap_ids)).all()
+        for agent in q:
+            agent.emulator_started_at = now
+        db.commit()
+        return len(q)
+    finally:
+        try:
+            db_gen.close()
+        except Exception:
+            pass

@@ -1,26 +1,43 @@
 ---
+# Launch WiFi emulators per agent with `timeout`.
+# Same variable contract as 5G.
+
 - hosts: localhost
+  gather_facts: false
   vars:
-    emulator_script: "/path/to/wifi_emulator.py"  # Path to the WiFi emulator Python script
+    emulator_script: "/app/app/emulators/wifi_emulator.py"
+    log_dir: "/var/log/emulators"
+
   tasks:
-    - name: Display the emulator details
-      debug:
-        msg: |
-          Spinning up {{ num_access_points }} WiFi access points.
-          Locations: {{ locations }}
-          Devices per access point: {{ num_devices }}
-          Emulation duration: {{ duration }} seconds
+    - name: Ensure emulator log dir exists
+      ansible.builtin.file:
+        path: "{{ log_dir }}"
+        state: directory
+        mode: "0755"
 
-    - name: Spin up WiFi access points
-      shell: |
-        for i in $(seq 1 {{ num_access_points }}); do
-          echo "Starting WiFi emulator $i on location {{ locations[i|int - 1] }}"
-          python {{ emulator_script }} --location {{ locations[i|int - 1] }} --devices {{ num_devices }} --duration {{ duration }} &
-        done
-      async: "{{ duration + 60 }}"
-      poll: 0
-      ignore_errors: yes
+    - name: Show execution plan
+      ansible.builtin.debug:
+        msg:
+          job_number: "{{ job_number | default('') }}"
+          agents: "{{ agents | map(attribute='ap_id') | list }}"
+          num_devices: "{{ num_devices }}"
+          duration_minutes: "{{ duration }}"
 
-    - name: Wait for emulation to finish
-      pause:
-        seconds: "{{ duration }}"
+    - name: Launch WiFi emulator per agent (detached, duration-capped)
+      ansible.builtin.shell: >
+        set -euo pipefail;
+        dur_sec=$(( {{ duration | int }} * 60 ));
+        log="{{ log_dir }}/{{ item.ap_id }}.log";
+        export EMU_PASSWORD="{{ item.password }}";
+        nohup timeout "${dur_sec}s" python3 {{ emulator_script }}
+          --ap-id "{{ item.ap_id }}"
+          --devices "{{ num_devices }}"
+          --lat "{{ item.location.lat }}"
+          --lon "{{ item.location.lon }}"
+          --duration-minutes "{{ duration | int }}"
+          >> "$log" 2>&1 < /dev/null & disown
+      args:
+        executable: /bin/bash
+      loop: "{{ agents }}"
+      loop_control:
+        label: "{{ item.ap_id }}"

@@ -1,123 +1,197 @@
-import logging
+# app/rabbitmq/subscriber_emulator_linux.py
 import json
-import time
-from ansible_runner import run
-from app.utils.http_callback import send_callback
-from dotenv import load_dotenv
-from app.rabbitmq.rabbitmq_connection import RabbitMQConnectionManager
+import logging
+import os
+import shutil
+import subprocess
+from typing import Any, Dict, List, Optional
+
 from app.rabbitmq.consumer import RabbitMQConsumer
+from app.database import mark_agents_started  # stamps emulator_started_at for agents
 
-load_dotenv()
-
-# Callback URL for emulator task completion
-EMULATOR_CALLBACK_URL = "http://localhost:8000/callback/emulator"
+# Optional override via env:
+ANSIBLE_PLAYBOOK_CMD = os.getenv("ANSIBLE_PLAYBOOK_CMD", "ansible-playbook")
 
 
-class EmulatorTaskSubscriber:
-    def __init__(self, queue_name="emulator_tasks"):
-        """
-        Initialize the EmulatorTaskSubscriber with RabbitMQ consumer and queue name.
-        """
+def _resolve_playbooks_dir(logger: logging.Logger) -> str:
+    """
+    Try several locations so the code works both in dev and inside the container.
+    Order:
+      1) PLAYBOOKS_DIR env
+      2) /app/app/playbooks        (typical for this project layout in the container)
+      3) /app/playbooks            (previous default)
+      4) <this_file_dir>/../playbooks
+    Returns the first dir that exists; if none exist, returns the first candidate
+    so error messages are predictable.
+    """
+    env_dir = os.getenv("PLAYBOOKS_DIR")
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        env_dir,
+        "/app/app/playbooks",
+        "/app/playbooks",
+        os.path.abspath(os.path.join(here, "..", "playbooks")),
+    ]
+    candidates = [c for c in candidates if c]  # drop None
+
+    for d in candidates:
+        if os.path.isdir(d):
+            logger.info("Using playbooks directory: %s", d)
+            return d
+
+    logger.warning(
+        "None of the expected playbooks directories exist. Candidates were: %s. "
+        "Proceeding with first candidate for clear errors.",
+        candidates,
+    )
+    return candidates[0]
+
+
+class EmulatorTaskSubscriberLinux:
+    """
+    Consumes messages from 'emulator_spinup', runs Ansible playbooks, and
+    on success calls mark_agents_started(agents) to stamp emulator_started_at.
+
+    Expected message:
+    {
+      "job_number": "...",
+      "emulators": [
+        {
+          "access_point_type": "WiFi" | "5G" | "LiFi",
+          "num_access_points": 2,
+          "locations": [...],
+          "num_devices": 10,
+          "duration": 30,
+          "agents": [ {"ap_id": "...", "password": "...", "location": {...}}, ... ]
+        },
+        ...
+      ]
+    }
+    """
+
+    def __init__(self, queue_name: str = "emulator_spinup"):
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
+        self.queue_name = queue_name
+        self.consumer = RabbitMQConsumer(queue_name=self.queue_name)
 
-        # Initialize RabbitMQ connection and consumer
-        self.rabbitmq_connection_manager = RabbitMQConnectionManager()
-        self.rabbitmq_consumer = RabbitMQConsumer(
-            self.rabbitmq_connection_manager, queue_name=queue_name
-        )
-
-    def process_message(self, body: dict):
-        """
-        Process the emulator spin-up task and run the Ansible playbook using ansible-runner.
-        """
-        task_data = body.get("data", {})
-        logging.info(f"Received task data: {task_data}")
-
-        # Extract task details
-        job_number = task_data.get("job_number")
-        access_point_type = task_data.get("access_point_type")
-        num_access_points = task_data.get("num_access_points")
-        locations = task_data.get("locations")
-        num_devices = task_data.get("num_devices")
-        duration = task_data.get("duration")
-
-        logging.info(f"Task received for job_number {job_number}: {access_point_type} emulator")
-
-        try:
-            # Get the appropriate playbook path based on the access_point_type
-            playbook = self.get_playbook(access_point_type)
-
-            # Prepare extra vars for Ansible
-            extra_vars = {
-                "num_access_points": num_access_points,
-                "locations": locations,
-                "num_devices": num_devices,
-                "duration": duration,
-            }
-
-            # Run the Ansible playbook using ansible-runner
-            result = run(
-                private_data_dir="/tmp",  # Required for ansible-runner
-                playbook=playbook,
-                extravars=extra_vars,
+        # Resolve ansible binary now for clearer logs
+        resolved = shutil.which(ANSIBLE_PLAYBOOK_CMD)
+        if not resolved:
+            self.logger.warning(
+                "Could not find '%s' on PATH. Install Ansible in this container "
+                "or set ANSIBLE_PLAYBOOK_CMD to the full path.",
+                ANSIBLE_PLAYBOOK_CMD,
             )
+        self.ansible_bin = resolved or ANSIBLE_PLAYBOOK_CMD
 
-            # Determine the playbook execution status
-            if result.status == "successful":
-                logging.info(f"Playbook executed successfully for job {job_number}")
-                payload = {
-                    "job_number": job_number,
-                    "status": "completed",
-                    "details": task_data,
-                }
-            else:
-                logging.error(f"Playbook failed for job {job_number}")
-                payload = {
-                    "job_number": job_number,
-                    "status": "failed",
-                    "details": result.stdout.read(),
-                }
+        # Resolve playbooks directory
+        self.playbooks_dir = _resolve_playbooks_dir(self.logger)
 
-            # Send the callback
-            send_callback(job_number, EMULATOR_CALLBACK_URL, [payload])
+    # ---------- helpers ----------
 
-        except Exception as e:
-            logging.error(f"Error processing job {job_number}: {str(e)}")
-            payload = {
-                "job_number": job_number,
-                "status": "failed",
-                "error": str(e),
-            }
-            send_callback(job_number, EMULATOR_CALLBACK_URL, [payload])
-
-    def get_playbook(self, access_point_type):
-        """
-        Returns the appropriate playbook based on the access_point_type.
-        """
-        playbook_mapping = {
+    @staticmethod
+    def _playbook_for(ap_type: str) -> str:
+        mapping = {
             "5G": "spinup_5g.yml",
             "WiFi": "spinup_wifi.yml",
             "LiFi": "spinup_lifi.yml",
         }
-        if access_point_type not in playbook_mapping:
-            raise ValueError(f"Unsupported access point type: {access_point_type}")
-        return playbook_mapping[access_point_type]
+        if ap_type not in mapping:
+            raise ValueError(f"Unsupported access point type: {ap_type}")
+        return mapping[ap_type]
+
+    def _run_playbook(self, playbook_filename: str, extra_vars: Dict[str, Any]) -> subprocess.CompletedProcess:
+        playbook_path = os.path.join(self.playbooks_dir, playbook_filename)
+        if not os.path.isfile(playbook_path):
+            raise FileNotFoundError(f"Playbook not found: {playbook_path}")
+
+        # Use in-memory localhost inventory and local connection to avoid inventory warnings.
+        cmd = [
+            self.ansible_bin,
+            "-i", "localhost,",
+            "-c", "local",
+            "-e", "ansible_python_interpreter=/usr/bin/python3",
+            playbook_path,
+            "--extra-vars",
+            json.dumps(extra_vars),
+        ]
+        self.logger.info("Running: %s", " ".join(cmd))
+        return subprocess.run(cmd, capture_output=True, text=True)
+
+    # ---------- consumer callback (single-arg!) ----------
+
+    def on_message(self, payload: Any) -> None:
+        try:
+            if not isinstance(payload, dict):
+                payload = json.loads(payload.decode("utf-8") if isinstance(payload, (bytes, bytearray)) else payload)
+
+            self.logger.info("Received message: %s", payload)
+
+            job_number: Optional[str] = payload.get("job_number")
+            emulators: List[Dict[str, Any]] = payload.get("emulators", [])
+
+            for emu in emulators:
+                ap_type = emu.get("access_point_type")
+                extra_vars = {
+                    "job_number": job_number,
+                    "access_point_type": ap_type,
+                    "num_access_points": emu.get("num_access_points"),
+                    "locations": emu.get("locations"),
+                    "num_devices": emu.get("num_devices"),
+                    "duration": emu.get("duration"),
+                    "agents": emu.get("agents", []),
+                }
+
+                self.logger.info(
+                    "Processing job %s for %s (num_access_points=%s num_devices=%s duration=%s)",
+                    job_number,
+                    ap_type,
+                    extra_vars["num_access_points"],
+                    extra_vars["num_devices"],
+                    extra_vars["duration"],
+                )
+
+                playbook = self._playbook_for(ap_type)
+
+                try:
+                    result = self._run_playbook(playbook, extra_vars)
+                except FileNotFoundError as fnf:
+                    self.logger.error("Playbook invocation failed: %s", fnf)
+                    continue
+                except Exception as e:
+                    self.logger.exception("Unexpected error running playbook: %s", e)
+                    continue
+
+                if result.returncode == 0:
+                    updated = mark_agents_started(extra_vars["agents"])
+                    self.logger.info(
+                        "Playbook succeeded for job %s (%s); updated %d agent(s).",
+                        job_number,
+                        ap_type,
+                        updated,
+                    )
+                else:
+                    stdout_tail = (result.stdout or "")[-4000:]
+                    stderr_tail = (result.stderr or "")[-4000:]
+                    self.logger.error(
+                        "Playbook failed for job %s (%s). RC=%s\nSTDOUT (tail):\n%s\nSTDERR (tail):\n%s",
+                        job_number,
+                        ap_type,
+                        result.returncode,
+                        stdout_tail,
+                        stderr_tail,
+                    )
+
+        except Exception as e:
+            self.logger.exception("Error processing message: %s", e)
+
+    # ---------- runner ----------
 
     def run(self):
-        """
-        Run the subscriber to listen for messages continuously.
-        """
-        self.logger.info("Starting EmulatorTaskSubscriber...")
-        try:
-            self.rabbitmq_consumer.start_consuming(self.process_message)
-        except KeyboardInterrupt:
-            self.logger.info("Shutting down EmulatorTaskSubscriber...")
-        finally:
-            self.rabbitmq_connection_manager.close()
+        self.logger.info("Starting EmulatorTaskSubscriberLinux on queue '%s'…", self.queue_name)
+        self.consumer.consume(self.on_message)
 
 
 if __name__ == "__main__":
-    # Start the Emulator Task Subscriber
-    subscriber = EmulatorTaskSubscriber(queue_name="emulator_tasks")
-    subscriber.run()
+    EmulatorTaskSubscriberLinux().run()
