@@ -43,13 +43,13 @@ export type OpenAPIConfig = {
 }
 
 export const OpenAPI: OpenAPIConfig = {
-  BASE: "",
+  BASE: "http://127.0.0.1:8888",   // ← point the client to your backend
   CREDENTIALS: "include",
   ENCODE_PATH: undefined,
   HEADERS: undefined,
   PASSWORD: undefined,
   RESULT: "body",
-  TOKEN: undefined,
+  TOKEN: undefined,                 // your existing auth flow/interceptors will keep working
   USERNAME: undefined,
   VERSION: "0.1.0",
   WITH_CREDENTIALS: false,
