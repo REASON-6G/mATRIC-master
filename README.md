@@ -61,82 +61,84 @@ This repository host the mATRIC software implementation platform, an intelligent
 
 [![API docs](img/docs.png)](https://github.com/REASON-6G/mATRIC-master)
 
-## How To Use It
+# mATRIC
 
-You can clone this repository as is.
+A local, containerised dev stack for the mATRIC platform.
 
-- Clone this repository manually:
+## Quick Start
 
-```bash
-git clone https://github.com/REASON-6G/mATRIC-master.git
+### 1) Clone the repo
+~~~bash
+git clone git@github.com:mATRIC-Platforms/mATRIC-master.git
+cd mATRIC-master
+~~~
+
+### 2) Start the stack
+
+**If your Docker Compose supports `--wait`:**
+~~~bash
+docker compose up -d --build --wait
+~~~
+
+**If your Docker Compose does not support `--wait`:**
+~~~bash
+docker compose build
+docker compose up -d mq db influxdb mailcatcher
+until [ "$(docker inspect -f '{{.State.Health.Status}}' $(docker compose ps -q mq))" = "healthy" ]; do sleep 2; done
+docker compose up -d backend agent agent_data agent_details agent_command frontend proxy adminer
+~~~
+
+## Endpoints & UI
+
+- Swagger / OpenAPI: <http://127.0.0.1:8888/docs>
+- Backend API root: <http://127.0.0.1:8888>
+- Frontend: <http://localhost/login>
+- InfluxDB: <http://localhost:8086/>
+
+## InfluxDB Setup
+
+Generate a token in the InfluxDB UI and set it in your `.env`:
+
+~~~env
+# InfluxDB
+INFLUXDB_TOKEN=sometoken
+~~~
+
+After updating `.env`, restart the backend:
+
+~~~bash
+docker compose up -d backend
+~~~
+
+## Postgres (psql) Access
+
+Run `psql` from the DB container:
+
+~~~bash
+docker compose run --rm db psql -a app -h db --username postgres
+~~~
+
+When prompted:
+```
+password: changethis
 ```
 
-- Enter into the new directory:
-
-```bash
-cd matric-master
+Useful `psql` commands:
+```
+\dt    -- list tables
+\dn    -- list schemas
+\du    -- list roles
+\q     -- quit
 ```
 
-- Push the code to your new repository:
+## Troubleshooting
 
-```bash
-git push -u origin master
-```
+- If a service keeps restarting, check its logs:
+~~~bash
+docker compose logs -f SERVICE_NAME
+~~~
+- Ensure Docker/Compose is running and enough CPU/RAM is allocated.
 
-### Update From the Original Repository
-
-After cloning the repository, and after doing changes, you might want to get the latest changes from master.
-
-- Make sure you added the original repository as a remote, you can check it with:
-
-```bash
-git remote -v
-
-origin    https://github.com/REASON-6G/mATRIC-master.git (fetch)
-origin    https://github.com/REASON-6G/mATRIC-master.git (push)
-```
-
-- Pull the latest changes without merging:
-
-```bash
-git pull --no-commit upstream master
-```
-
-This will download the latest changes from master without committing them, that way you can check everything is right before committing.
-
-- If there are conflicts, solve them in your editor.
-
-- Once you are done, commit the changes:
-
-```bash
-git merge --continue
-```
-
-### Configure
-
-You can then update configs in the `.env` files to customize your configurations.
-
-Before deploying it, make sure you change at least the values for:
-
-- `SECRET_KEY`
-- `FIRST_SUPERUSER_PASSWORD`
-- `POSTGRES_PASSWORD`
-
-You can (and should) pass these as environment variables from secrets.
-
-Read the [deployment.md](./deployment.md) docs for more details.
-
-### Generate Secret Keys
-
-Some environment variables in the `.env` file have a default value of `changethis`.
-
-You have to change them with a secret key, to generate secret keys you can run the following command:
-
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
-Copy the content and use that as password / secret key. And run that again to generate another secure key.
 
 ## Backend Development
 

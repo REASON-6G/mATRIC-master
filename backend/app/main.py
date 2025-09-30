@@ -7,6 +7,7 @@ from app.routes.send_command import router as send_command_router  # Route for s
 from app.routes.agent_data_callback import router as agent_data_callback_router  # Agent data callback route
 from app.routes.agent_details_callback import router as agent_details_callback_router  # Agent details callback route
 from app.routes import emulator
+from app.routes.metrics import router as metrics_router
 from app.config import settings
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -59,7 +60,10 @@ app.include_router(agent_details_router, prefix="/api/v1/agent_details", tags=["
 app.include_router(agent_data_router, prefix="/api/v1/agent_data", tags=["agent_data"])
 app.include_router(send_command_router, prefix="/api/v1/send_command", tags=["send_command"])
 app.include_router(emulator.router, prefix="/api/v1/emulator", tags=["emulator"])
+app.include_router(metrics_router, prefix="/api/v1/metrics", tags=["metrics"])
 # Include the callback routers
 app.include_router(agent_data_callback_router, prefix="/api/v1/callback/agent_data", tags=["agent_data_callback"])
 app.include_router(agent_details_callback_router, prefix="/api/v1/callback/agent_details", tags=["agent_details_callback"])
 app.include_router(agent_details_callback_router, prefix="/api/v1/callback/emulator", tags=["emulator_callback"])
+
+

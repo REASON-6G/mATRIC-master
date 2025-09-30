@@ -268,6 +268,43 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
 
+  emulator_subscriber:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    restart: always
+    command: python app/rabbitmq/subscriber_emulator_linux.py
+    depends_on:
+      db:
+        condition: service_started
+      mq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY?Variable not set}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - RABBITMQ_HOST=${RABBITMQ_HOST?Variable not set}
+      - RABBITMQ_PORT=${RABBITMQ_PORT?Variable not set}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST?Variable not set}
+      - RABBITMQ_USER=${RABBITMQ_USER?Variable not set}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD?Variable not set}
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN}
+      - PLAYBOOKS_DIR=/app/app/playbooks
+      - ANSIBLE_PLAYBOOK_BIN=/usr/bin/ansible-playbook
+    build:
+      context: ./backend
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
+        INSTALL_ANSIBLE: "true"
+    platform: linux/amd64
+
 volumes:
   app-postgres-data:
   app-influxdb-data:

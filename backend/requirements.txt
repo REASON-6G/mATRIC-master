@@ -13,4 +13,6 @@ email-validator
 python-multipart
 cryptography
 pika
+requests==2.32.3
+
 

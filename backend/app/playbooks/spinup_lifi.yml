@@ -1,26 +1,61 @@
 ---
+# Launch LiFi emulators per agent; identical contract to 5G/WiFi.
+
 - hosts: localhost
+  connection: local
+  gather_facts: false
   vars:
-    emulator_script: "/path/to/lifi_emulator.py"  # Path to the LiFi emulator Python script
+    emulator_script: "/app/app/emulators/lifi/emulate-lifi.py"
+    log_dir: "/var/log/emulators"
+
   tasks:
-    - name: Display the emulator details
-      debug:
-        msg: |
-          Spinning up {{ num_access_points }} LiFi access points.
-          Locations: {{ locations }}
-          Devices per access point: {{ num_devices }}
-          Emulation duration: {{ duration }} seconds
+    - name: Ensure emulator log dir exists
+      ansible.builtin.file:
+        path: "{{ log_dir }}"
+        state: directory
+        mode: "0755"
 
-    - name: Spin up LiFi access points
-      shell: |
-        for i in $(seq 1 {{ num_access_points }}); do
-          echo "Starting LiFi emulator $i on location {{ locations[i|int - 1] }}"
-          python {{ emulator_script }} --location {{ locations[i|int - 1] }} --devices {{ num_devices }} --duration {{ duration }} &
-        done
-      async: "{{ duration + 60 }}"
+    - name: Show execution plan
+      ansible.builtin.debug:
+        msg:
+          job_number: "{{ job_number | default('') }}"
+          agents: "{{ agents | map(attribute='ap_id') | list }}"
+          num_devices: "{{ num_devices }}"
+          duration_minutes: "{{ duration }}"
+          emulator_script: "{{ emulator_script }}"
+
+    - name: Check emulator script exists
+      ansible.builtin.stat:
+        path: "{{ emulator_script }}"
+      register: emu_script_stat
+
+    - name: Abort if emulator script missing
+      ansible.builtin.fail:
+        msg: "Emulator script not found at {{ emulator_script }}. Fix the path or copy the file into the container."
+      when: not emu_script_stat.stat.exists
+
+    # Run per agent; cap lifetime; log to file
+    - name: Launch LiFi emulator per agent (async, duration-capped, log to file)
+      ansible.builtin.shell: |
+        set -o pipefail
+        /usr/bin/timeout {{ (duration | int) * 60 }}s \
+          /usr/bin/python3 {{ emulator_script }} \
+            --ap-id {{ item.ap_id }} \
+            --password {{ item.password }} \
+            --devices {{ num_devices }} \
+            --lat {{ item.location.lat }} \
+            --lon {{ item.location.lon }} \
+            --duration-minutes {{ duration | int }} \
+            --token-url http://backend/api/v1/token/?login_type=agent \
+            --post-url  http://backend/api/v1/agent_update/update \
+          > {{ log_dir }}/{{ item.ap_id }}.log 2>&1
+      async: "{{ ((duration | int) * 60) + 60 }}"
       poll: 0
-      ignore_errors: yes
+      loop: "{{ agents }}"
+      loop_control:
+        label: "{{ item.ap_id }}"
+      register: async_jobs
 
-    - name: Wait for emulation to finish
-      pause:
-        seconds: "{{ duration }}"
+    - name: Note PIDs/async job ids (for debugging)
+      ansible.builtin.debug:
+        var: async_jobs
