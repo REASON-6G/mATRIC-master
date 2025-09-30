@@ -8,9 +8,10 @@ import {
 } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
 import { FiLogOut, FiUser } from "react-icons/fi"
-import { FaUserCog } from "react-icons/fa";
+import { FaUserCog } from "react-icons/fa"
 
 import useAuth from "../../hooks/useAuth"
+import { SHOW_PROFILE_LINK } from "../../lib/uiFlags" // ← feature flag
 
 const UserMenu = () => {
   const { logout } = useAuth()
@@ -37,9 +38,11 @@ const UserMenu = () => {
             isRound
           />
           <MenuList>
-            <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="settings">
-              My profile
-            </MenuItem>
+            {SHOW_PROFILE_LINK && (
+              <MenuItem icon={<FiUser fontSize="18px" />} as={Link} to="settings">
+                My profile
+              </MenuItem>
+            )}
             <MenuItem
               icon={<FiLogOut fontSize="18px" />}
               onClick={handleLogout}

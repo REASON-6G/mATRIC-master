@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi"
 
 import type { UserPublic } from "../../client"
+import { SHOW_SETTINGS_LINK } from "../../lib/uiFlags"
 
 type Item = {
   icon: React.ComponentType<any>
@@ -20,16 +21,22 @@ type Item = {
   external?: boolean
 }
 
-const items: Item[] = [
-  // Dashboard is your Metrics page at "/"
+const baseItems: Item[] = [
   { icon: FiHome, title: "Dashboard", path: "/" },
-  // >>> renamed + points to the map route
   { icon: FiMapPin, title: "Access Point Map", path: "/access-points" },
   { icon: FiCodepen, title: "Emulator", path: "/emulator" },
-  { icon: FiCode, title: "API Documentation", path: "https://matric.redocly.app/", external: true },
-  // >>> user settings route
-  { icon: FiSettings, title: "User Settings", path: "/user" },
+  {
+    icon: FiCode,
+    title: "API Documentation",
+    path: "http://127.0.0.1:8888/docs",
+    external: true,
+  },
 ]
+
+// Add “User Settings” only when the flag is ON
+const items: Item[] = SHOW_SETTINGS_LINK
+  ? [...baseItems, { icon: FiSettings, title: "User Settings", path: "/user" }]
+  : baseItems
 
 interface SidebarItemsProps {
   onClose?: () => void
@@ -49,7 +56,6 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
     <Box>
       {finalItems.map(({ icon, title, path, external }) => {
         if (external) {
-          // External link: open in new tab (don’t use router Link)
           return (
             <Flex
               as="a"
@@ -69,7 +75,6 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
           )
         }
 
-        // Internal app routes: use TanStack Router Link so activeProps works
         return (
           <Flex
             as={Link}
@@ -78,10 +83,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
             p={2}
             key={title}
             activeProps={{
-              style: {
-                background: bgActive,
-                borderRadius: "12px",
-              },
+              style: { background: bgActive, borderRadius: "12px" },
             }}
             color={textColor}
             onClick={onClose}
