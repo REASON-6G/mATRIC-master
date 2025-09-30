@@ -1,4 +1,3 @@
-
 export type Body_login_login_access_token = {
   grant_type?: string | null
   username: string
@@ -112,4 +111,41 @@ export type Channel = {
   dest_host: string
   dest_port: number
   console_level?: number | null
+}
+
+/* -----------------------------
+   Emulator models (NEW)
+------------------------------ */
+
+/** Request body to create/run an emulator job */
+export type EmulatorCreateRequest = {
+  /** '5G' | 'WiFi' | 'LiFi' | etc. */
+  emulator_type: string
+  /** Free-form location string or code */
+  location: string
+  /** Number of access points to emulate */
+  access_points: number
+  /** Number of users */
+  users: number
+  /** Optional user traffic limit (Mbps, etc.) */
+  traffic_limit?: number | null
+  /** Optional ISO date/time for start */
+  start_time?: string | null
+  /** Optional description */
+  description?: string | null
+}
+
+/** Response after creating an emulator job */
+export type EmulatorCreateResponse = {
+  id: string
+  status: 'queued' | 'running' | 'completed' | 'failed'
+  message?: string | null
+}
+
+/** Poll-able status for an emulator job */
+export type EmulatorStatusResponse = {
+  id: string
+  status: 'queued' | 'running' | 'completed' | 'failed'
+  progress?: number | null // 0..100
+  message?: string | null
 }
