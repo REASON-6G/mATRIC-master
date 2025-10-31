@@ -37,6 +37,6 @@ jobs:
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - run: docker compose -f docker-compose.yml -f docker-compose.traefik.yml --project-name ${{ vars.STACK_NAME_STAGING }} build
       - run: docker compose -f docker-compose.yml -f docker-compose.traefik.yml --project-name ${{ vars.STACK_NAME_STAGING }} up -d
