@@ -17,19 +17,18 @@ import { type SubmitHandler, useForm } from "react-hook-form"
 
 import {
   type ApiError,
-  type ItemPublic,
-  type ItemUpdate,
-  ItemsService,
+  type AgentUpdate,
+  AgentsService,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 
 interface EditItemProps {
-  item: ItemPublic
+  agent: AgentUpdate
   isOpen: boolean
   onClose: () => void
 }
 
-const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
+const EditItem = ({ agent, isOpen, onClose }: EditItemProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const {
@@ -37,15 +36,15 @@ const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
     handleSubmit,
     reset,
     formState: { isSubmitting, errors, isDirty },
-  } = useForm<ItemUpdate>({
+  } = useForm<AgentUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: item,
+    defaultValues: agent,
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ItemUpdate) =>
-      ItemsService.updateItem({ id: item.id, requestBody: data }),
+    mutationFn: (data: AgentUpdate) =>
+      AgentsService.updateAgent({ id: agent.id, requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "Access point updated successfully.", "success")
       onClose()
@@ -59,7 +58,7 @@ const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
     },
   })
 
-  const onSubmit: SubmitHandler<ItemUpdate> = async (data) => {
+  const onSubmit: SubmitHandler<AgentUpdate> = async (data) => {
     mutation.mutate(data)
   }
 
@@ -81,24 +80,29 @@ const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
           <ModalHeader>Edit Item</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isInvalid={!!errors.title}>
-              <FormLabel htmlFor="title">Title</FormLabel>
-              <Input
-                id="title"
-                {...register("title", {
-                  required: "Title is required",
-                })}
-                type="text"
-              />
-              {errors.title && (
-                <FormErrorMessage>{errors.title.message}</FormErrorMessage>
-              )}
+            <FormControl isInvalid={!!errors.configuration}>
+              <FormLabel htmlFor="configuration">Config</FormLabel>
+                <Input
+                  id="configuration"
+                  {...register("configuration", {
+                    required: "Configuration is required",
+                  })}
+                  type="text"
+                />
+                {errors.configuration?.message && (  // Optional chaining for safer access
+                  <FormErrorMessage>
+                    {(() => {
+                      const errorMessage = errors.configuration?.message
+                      return typeof errorMessage === 'string' ? errorMessage : 'Invalid configuration'
+                    })()}
+                  </FormErrorMessage>
+                )}
             </FormControl>
             <FormControl mt={4}>
-              <FormLabel htmlFor="description">Description</FormLabel>
+              <FormLabel htmlFor="ap_id">Access Point Name</FormLabel>
               <Input
-                id="description"
-                {...register("description")}
+                id="ap_id"
+                {...register("ap_id")}
                 placeholder="Description"
                 type="text"
               />
@@ -107,7 +111,7 @@ const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
               <FormLabel htmlFor="location">Location</FormLabel>
               <Input
                   id="location"
-                  {...register("data")}
+                  {...register("configuration.location")}
                   placeholder="Location"
                   type="text"
               />
