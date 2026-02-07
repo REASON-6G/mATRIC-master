@@ -22,6 +22,7 @@ jobs:
         with:
           python-version: '3.10'
 
+      - run: docker network create traefik-public
       - run: docker compose build
       - run: docker compose down -v --remove-orphans
       - run: docker compose up -d

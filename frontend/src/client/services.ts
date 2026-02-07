@@ -48,6 +48,9 @@ export class LoginService {
       method: "POST",
       url: "/api/v1/token",
       formData: formData,
+      query: {
+        login_type: "user"
+      },
       mediaType: "application/x-www-form-urlencoded",
       errors: {
         422: `Validation Error`,
